@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bitboard.cpp" />
+    <ClCompile Include="position.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="moveGen.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitboard.h" />
-    <ClInclude Include="color.h" />
+    <ClInclude Include="position.h" />
     <ClInclude Include="moveGen.h" />
+    <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

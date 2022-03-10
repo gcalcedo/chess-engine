@@ -1,17 +1,16 @@
-#include "bitboard.h"
+#include "position.h"
 
-BitBoard::BitBoard(std::string fen) {
-	printBoard();
+Position::Position(std::string fen) {
 	init();
 }
 
-void BitBoard::init() {
+void Position::init() {
 	std::string binary;
 
 	for (size_t x = 0; x < 8; ++x) {
 		for (size_t y = 0; y < 8; ++y) {
 			binary = "0000000000000000000000000000000000000000000000000000000000000000";
-			binary = binary.substr(x * 8 + y + 1) + "1" + binary.substr(0, x * 8 + y);
+			binary = binary.substr(0, x * 8 + y) + "1" + binary.substr(x * 8 + y + 1);
 
 			switch (board[x][y]) {
 			case 'P': white_pawns += std::stoull(binary, nullptr, 2); break;
@@ -31,7 +30,7 @@ void BitBoard::init() {
 	}
 }
 
-void BitBoard::printBoard() {
+void Position::printBoard() {
 	for (size_t x = 0; x < 8; ++x) {
 		for (size_t y = 0; y < 8; ++y) {
 			std::cout << board[x][y] << " ";
@@ -40,10 +39,10 @@ void BitBoard::printBoard() {
 	}
 }
 
-void BitBoard::printBitBoard(long long value) {
+void Position::printBitBoard(long long value) {
 	for (size_t x = 0; x < 8; ++x) {
 		for (size_t y = 0; y < 8; ++y) {
-			int idx = x * 8 + y;
+			int idx = 63 - (x * 8 + y);
 
 			if ((1ll << idx) & value) {
 				std::cout << "1 ";

@@ -1,10 +1,10 @@
-#include "bitboard.h"
+#include "position.h"
 #include "moveGen.h"
 
 int main() {
-	BitBoard *bitboard = new BitBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	Position *bitboard = new Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-	MoveGen &gen = *(new MoveGen(*bitboard, Color::WHITE));
+	MoveGen &gen = *(new MoveGen(*bitboard));
 
-	gen.genPawn();
+	gen.genMoves(Color::WHITE);
 }

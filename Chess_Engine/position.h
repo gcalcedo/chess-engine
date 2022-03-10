@@ -4,10 +4,9 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include "types.h"
 
-typedef unsigned long long U64;
-
-class BitBoard
+class Position
 {
 public:
 	U64 white_pawns = 0LL;
@@ -30,14 +29,14 @@ public:
 		{'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
 		{'-', '-', '-', '-', '-', '-', '-', '-'},
 		{'-', '-', '-', '-', '-', '-', '-', '-'},
-		{'-', '-', '-', '-', '-', '-', '-', '-'},
-		{'-', '-', '-', '-', '-', '-', '-', '-'},
-		{'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
+		{'-', '-', '-', '-', 'P', '-', '-', '-'},
+		{'P', '-', '-', 'P', '-', '-', '-', '-'},
+		{'-', 'P', 'P', '-', '-', 'P', 'P', 'P'},
 		{'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
 	};
 
 public:
-	BitBoard(std::string fen);
+	Position(std::string fen);
 
 	void init();
 	void printBoard();	
