@@ -48,3 +48,25 @@ enum Rank : U64 {
 	RANK_7 = RANK_1 << 8 * 6,
 	RANK_8 = RANK_1 << 8 * 7
 };
+
+enum Square {
+	S_H1, S_G1, S_F1, S_E1, S_D1, S_C1, S_B1, S_A1,
+	S_H2, S_G2, S_F2, S_E2, S_D2, S_C2, S_B2, S_A2,
+	S_H3, S_G3, S_F3, S_E3, S_D3, S_C3, S_B3, S_A3,
+	S_H4, S_G4, S_F4, S_E4, S_D4, S_C4, S_B4, S_A4,
+	S_H5, S_G5, S_F5, S_E5, S_D5, S_C5, S_B5, S_A5,
+	S_H6, S_G6, S_F6, S_E6, S_D6, S_C6, S_B6, S_A6,
+	S_H7, S_G7, S_F7, S_E7, S_D7, S_C7, S_B7, S_A7,
+	S_H8, S_G8, S_F8, S_E8, S_D8, S_C8, S_B8, S_A8,
+};
+
+struct Move {
+public:
+	Square from;
+	Square to;
+
+	Move(Square from, Square to) {
+		this->from = from;
+		this->to = to;
+	}
+};

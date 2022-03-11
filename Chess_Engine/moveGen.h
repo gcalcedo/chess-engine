@@ -16,6 +16,8 @@ private:
 public:
 	MoveGen(Position& position);
 
+	std::vector<Move> moves;
+
 	void genMoves(Color color);
 
 private:
@@ -36,5 +38,6 @@ private:
 	U64 black_mask();
 
 	void genPawn();
+	void appendMoves(std::vector<Move> *target, U64 source, Direction move);
 };
 

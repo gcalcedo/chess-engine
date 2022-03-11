@@ -3,6 +3,8 @@
 MoveGen::MoveGen(Position& position) : pos(position) {}
 
 void MoveGen::genMoves(Color color) {
+	moves.clear();
+
 	turn = color;
 
 	player = turn == Color::WHITE ? white_mask() : black_mask();
@@ -22,14 +24,28 @@ U64 MoveGen::black_mask() {
 }
 
 void MoveGen::genPawn() {
-	U64 moves = 0LL;
-
-	pos.printBitBoard(pos.white_pawns);
-
 	U64 east_captures = move<NORTH_EAST>(pos.white_pawns) & rival;
-	U64 west_captures = move<NORTH_WEST>(pos.white_pawns) & rival;
-	U64 forward = move<NORTH>(pos.white_pawns) & empty;
-	U64 forward_double = move<NORTH>(forward) & (move<NORTH2>(pos.white_pawns & RANK_2) & empty);
+	appendMoves(&moves, east_captures, SOUTH_WEST);
 
-	pos.printBitBoard(forward_double);
+	U64 west_captures = move<NORTH_WEST>(pos.white_pawns) & rival;
+	appendMoves(&moves, west_captures, SOUTH_EAST);
+
+	U64 forward = move<NORTH>(pos.white_pawns) & empty;
+	appendMoves(&moves, forward, SOUTH);
+
+	U64 forward_double = move<NORTH>(forward) & (move<NORTH2>(pos.white_pawns & RANK_2) & empty);
+	appendMoves(&moves, forward_double, SOUTH2);
+
+	for (Move m : moves) {
+		std::cout << m.from << " -> " << m.to << std::endl;
+	}
+}
+
+void MoveGen::appendMoves(std::vector<Move> *target, U64 source, Direction move) {
+	unsigned long idx;
+	while (source != 0) {
+		_BitScanForward64(&idx, source);
+		target->push_back(Move((Square) (idx + move), (Square) idx));
+		source ^= 1ULL << idx;
+	}
 }
