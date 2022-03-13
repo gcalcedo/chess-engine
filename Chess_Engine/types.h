@@ -1,12 +1,27 @@
 #pragma once
 
-typedef unsigned long long U64;
+/// <summary>
+/// 64 bitboard.
+/// </summary>
+typedef unsigned long long u64;
 
+#pragma region Pieces
 enum class Color {
 	WHITE,
 	BLACK
 };
 
+enum Piece {
+	ROOK,
+	KNIGHT,
+	BISHOP,
+	QUEEN,
+	KING,
+	PAWN
+};
+#pragma endregion
+
+#pragma region Board
 enum Direction {
 	NORTH = 8,
 	EAST = -1,
@@ -27,7 +42,7 @@ enum Direction {
 	SOUTH2_WEST = SOUTH2 + WEST
 };
 
-enum File : U64 {
+enum File : u64 {
 	FILE_A = 0x8080808080808080ULL,
 	FILE_B = FILE_A >> 1,
 	FILE_C = FILE_A >> 2,
@@ -38,7 +53,7 @@ enum File : U64 {
 	FILE_H = FILE_A >> 7
 };
 
-enum Rank : U64 {
+enum Rank : u64 {
 	RANK_1 = 0x00000000000000FFULL,
 	RANK_2 = RANK_1 << 8 * 1,
 	RANK_3 = RANK_1 << 8 * 2,
@@ -59,14 +74,53 @@ enum Square {
 	S_H7, S_G7, S_F7, S_E7, S_D7, S_C7, S_B7, S_A7,
 	S_H8, S_G8, S_F8, S_E8, S_D8, S_C8, S_B8, S_A8,
 };
+#pragma endregion
 
+#pragma region Moves
+
+typedef unsigned short u16;
+
+enum MoveType {
+	QUIET,
+	CASTLING,
+	CAPTURE = 4,
+	PROMOTION = 8,
+};
+
+/// <summary>
+/// <para> Bits [15...10] -> FROM </para>
+/// <para> Bits [9 ... 4] -> TO </para>
+/// <para> Bits [3 ... 0] -> SPECIAL MOVES </para>
+/// </summary>
 struct Move {
-public:
-	Square from;
-	Square to;
+private:
+	u16 data = 0;
 
-	Move(Square from, Square to) {
-		this->from = from;
-		this->to = to;
+public:
+	Move(Square from, Square to, char flags) {
+		data += from << 10;
+		data += to << 4;
+		data += flags;
+	}
+
+	int getFrom() { return (data >> 10) & 63; }
+	int getTo() { return (data >> 4) & 63; }
+	int getPromotion() { return data & 3; }
+
+	bool isQuiet() { return (data & 15) == 0; }
+	bool isCapture() { return (data & 4) == 4; }
+	bool isPromotion() { return (data & 8) == 8; }
+
+	void print() {
+		for (size_t i = 1; i <= 16; i++) {
+			if ((1ll << (16 - i)) & data) {
+				std::cout << "1 ";
+			}
+			else {
+				std::cout << "0 ";
+			}
+		}
+		std::cout << std::endl;
 	}
 };
+#pragma endregion

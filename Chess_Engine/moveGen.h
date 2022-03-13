@@ -8,10 +8,10 @@ private:
 	Position& pos;
 	Color turn = Color::WHITE;
 
-	U64 player = 0ULL;
-	U64 rival = 0ULL;
-	U64 occupied = 0ULL;
-	U64 empty = 0ULL;
+	u64 player = 0ULL;
+	u64 rival = 0ULL;
+	u64 occupied = 0ULL;
+	u64 empty = 0ULL;
 
 public:
 	MoveGen(Position& position);
@@ -22,7 +22,7 @@ public:
 
 private:
 
-	template <Direction D> U64 move(U64 board) {
+	template <Direction D> u64 move(u64 board) {
 		bool shiftLeft = D > 0;
 		bool isEast = D % 8 == 7;
 		bool isWest = D % 8 == 1;
@@ -34,10 +34,12 @@ private:
 		return shiftLeft ? board << magnitude : board >> magnitude;
 	}
 
-	U64 white_mask();
-	U64 black_mask();
+	u64 white_mask();
+	u64 black_mask();
 
 	void genPawn();
-	void appendMoves(std::vector<Move> *target, U64 source, Direction move);
+	void genKnight();
+	void appendMoves(u64 source, Direction move);
+	void appendPromotions(u64 source, Direction move);
 };
 

@@ -30,6 +30,17 @@ void Position::init() {
 	}
 }
 
+u64 Position::getBoard(Color color, Piece piece) {
+	switch (piece) {
+	case PAWN: return color == Color::WHITE ? white_pawns : black_pawns;
+	case ROOK: return color == Color::WHITE ? white_rooks : black_rooks;
+	case KNIGHT: return color == Color::WHITE ? white_knights : black_knights;
+	case BISHOP: return color == Color::WHITE ? white_bishops : black_bishops;
+	case QUEEN: return color == Color::WHITE ? white_queens : black_queens;
+	case KING: return color == Color::WHITE ? white_kings : black_kings;
+	}
+}
+
 void Position::printBoard() {
 	for (size_t x = 0; x < 8; ++x) {
 		for (size_t y = 0; y < 8; ++y) {

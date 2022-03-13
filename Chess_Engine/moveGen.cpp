@@ -15,37 +15,60 @@ void MoveGen::genMoves(Color color) {
 	genPawn();
 }
 
-U64 MoveGen::white_mask() {
+u64 MoveGen::white_mask() {
 	return pos.white_pawns | pos.white_rooks | pos.white_knights | pos.white_bishops | pos.white_queens | pos.white_kings;
 }
 
-U64 MoveGen::black_mask() {
+u64 MoveGen::black_mask() {
 	return pos.black_pawns | pos.black_rooks | pos.black_knights | pos.black_bishops | pos.black_queens | pos.black_kings;
 }
 
 void MoveGen::genPawn() {
-	U64 east_captures = move<NORTH_EAST>(pos.white_pawns) & rival;
-	appendMoves(&moves, east_captures, SOUTH_WEST);
+	u64 pawns = pos.getBoard(turn, PAWN);
 
-	U64 west_captures = move<NORTH_WEST>(pos.white_pawns) & rival;
-	appendMoves(&moves, west_captures, SOUTH_EAST);
+	appendMoves(move<NORTH_EAST>(pawns) & rival & ~RANK_8, SOUTH_WEST);
+	appendMoves(move<NORTH_WEST>(pawns) & rival & ~RANK_8, SOUTH_EAST);
 
-	U64 forward = move<NORTH>(pos.white_pawns) & empty;
-	appendMoves(&moves, forward, SOUTH);
+	appendMoves(move<NORTH>(pawns) & empty & ~RANK_8, SOUTH);
+	appendMoves(move<NORTH>(empty) & (move<NORTH2>(pawns & RANK_2) & empty), SOUTH2);
 
-	U64 forward_double = move<NORTH>(forward) & (move<NORTH2>(pos.white_pawns & RANK_2) & empty);
-	appendMoves(&moves, forward_double, SOUTH2);
+	appendPromotions(move<NORTH_EAST>(pawns) & rival & RANK_8, SOUTH_WEST);
+	appendPromotions(move<NORTH_WEST>(pawns) & rival & RANK_8, SOUTH_EAST);
+	appendPromotions(move<NORTH>(pawns) & empty & RANK_8, SOUTH);
 
-	for (Move m : moves) {
-		std::cout << m.from << " -> " << m.to << std::endl;
+	for (Move move : moves) {
+		move.print();
+		if (move.isQuiet()) {
+			std::cout << move.getFrom() << " -> " << move.getTo() << std::endl;
+		}
+		if (move.isCapture()) {
+			std::cout << move.getFrom() << " -> " << move.getTo() << " Capture!" << std::endl;
+		}
+		if (move.isPromotion()) {
+			std::cout << move.getFrom() << " -> " << move.getTo() << " | " << move.getPromotion() << std::endl;
+		}
 	}
 }
 
-void MoveGen::appendMoves(std::vector<Move> *target, U64 source, Direction move) {
+void MoveGen::appendMoves(u64 source, Direction move) {
 	unsigned long idx;
 	while (source != 0) {
 		_BitScanForward64(&idx, source);
-		target->push_back(Move((Square) (idx + move), (Square) idx));
+		char isCapture = (rival & (1ULL << idx)) != 0 ? CAPTURE : QUIET;
+		moves.push_back(Move(Square(idx + move), (Square)idx, isCapture));
+		source ^= 1ULL << idx;
+	}
+}
+
+void MoveGen::appendPromotions(u64 source, Direction move) {
+	unsigned long idx;
+	while (source != 0) {
+		_BitScanForward64(&idx, source);
+		char isCapture = (rival & (1ULL << idx)) != 0 ? CAPTURE : QUIET;
+		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | ROOK | isCapture));
+		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | KNIGHT | isCapture));
+		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | BISHOP | isCapture));
+		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | QUEEN | isCapture));
 		source ^= 1ULL << idx;
 	}
 }
