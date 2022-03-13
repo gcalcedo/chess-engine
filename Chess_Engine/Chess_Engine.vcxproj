@@ -26,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="position.h" />
     <ClInclude Include="moveGen.h" />
+    <ClInclude Include="stringify.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>

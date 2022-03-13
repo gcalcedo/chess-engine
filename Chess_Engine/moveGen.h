@@ -24,12 +24,12 @@ private:
 
 	template <Direction D> u64 move(u64 board) {
 		bool shiftLeft = D > 0;
-		bool isEast = D % 8 == 7;
-		bool isWest = D % 8 == 1;
+		bool isEast = D % 8 == 7; bool isDoubleEast = D % 8 == 6;
+		bool isWest = D % 8 == 1; bool isDoubleWest = D % 8 == 2;
 		int magnitude = abs(D);
 
-		if (isEast) board = board & ~FILE_H;
-		if (isWest) board = board & ~FILE_A;
+		if (isEast) board = board & ~FILE_H; if (isDoubleEast) board = board & ~FILE_H & ~FILE_G;
+		if (isWest) board = board & ~FILE_A; if (isDoubleWest) board = board & ~FILE_A & ~FILE_B;
 
 		return shiftLeft ? board << magnitude : board >> magnitude;
 	}
@@ -39,7 +39,7 @@ private:
 
 	void genPawn();
 	void genKnight();
-	void appendMoves(u64 source, Direction move);
-	void appendPromotions(u64 source, Direction move);
+	void appendMoves(u64 source, Direction move, char moveFlags);
+	void appendPromotions(u64 source, Direction move, char moveFlags);
 };
 

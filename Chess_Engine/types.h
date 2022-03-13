@@ -1,5 +1,10 @@
 #pragma once
 
+#include <string>
+#include <iostream>
+
+#include "stringify.h"
+
 /// <summary>
 /// 64 bitboard.
 /// </summary>
@@ -34,12 +39,18 @@ enum Direction {
 	SOUTH_WEST = SOUTH + WEST,
 
 	NORTH2 = NORTH + NORTH,
+	EAST2 = EAST + EAST,
 	SOUTH2 = SOUTH + SOUTH,
+	WEST2 = WEST + WEST,
 
 	NORTH2_EAST = NORTH2 + EAST,
 	NORTH2_WEST = NORTH2 + WEST,
 	SOUTH2_EAST = SOUTH2 + EAST,
-	SOUTH2_WEST = SOUTH2 + WEST
+	SOUTH2_WEST = SOUTH2 + WEST,
+	EAST2_NORTH = EAST2 + NORTH,
+	EAST2_SOUTH = EAST2 + SOUTH,
+	WEST2_NORTH = WEST2 + NORTH,
+	WEST2_SOUTH = WEST2 + SOUTH
 };
 
 enum File : u64 {
@@ -82,7 +93,8 @@ typedef unsigned short u16;
 
 enum MoveType {
 	QUIET,
-	CASTLING,
+	DOUBLE_PAWN_PUSH = 1,
+	EN_PASSANT = 5,
 	CAPTURE = 4,
 	PROMOTION = 8,
 };
@@ -103,11 +115,13 @@ public:
 		data += flags;
 	}
 
-	int getFrom() { return (data >> 10) & 63; }
-	int getTo() { return (data >> 4) & 63; }
-	int getPromotion() { return data & 3; }
+	Square getFrom() { return (Square)((data >> 10) & 63); }
+	Square getTo() { return (Square)((data >> 4) & 63); }
+	Piece getPromotion() { return (Piece)(data & 3); }
 
 	bool isQuiet() { return (data & 15) == 0; }
+	bool isDoublePawnPush() { return (data & 15) == 1; }
+	bool isEnPassant() { return (data & 15) == 5; }
 	bool isCapture() { return (data & 4) == 4; }
 	bool isPromotion() { return (data & 8) == 8; }
 
@@ -120,6 +134,15 @@ public:
 				std::cout << "0 ";
 			}
 		}
+
+		std::cout << "-> "
+			<< Stringify::square(getFrom()) << "-"
+			<< Stringify::square(getTo());
+
+		if (isDoublePawnPush()) std::cout << " | Double Pawn Push";
+		if (isCapture()) std::cout << " | Capture";
+		if (isPromotion()) std::cout << " | Promotion [" << Stringify::piece(getPromotion()) << "]";
+
 		std::cout << std::endl;
 	}
 };
