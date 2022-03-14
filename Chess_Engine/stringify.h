@@ -30,4 +30,27 @@ public:
 		case 5: return "PAWN";
 		}
 	}
+
+	static std::string bitboard(unsigned long long bitboard) {
+		std::string stringBitboard = "";
+
+		for (size_t x = 0; x < 8; ++x) {
+			stringBitboard.append(std::to_string(8 - x) + " | ");
+			for (size_t y = 0; y < 8; ++y) {
+				int idx = 63 - (x * 8 + y);
+
+				if ((1ll << idx) & bitboard) {
+					stringBitboard.append("1 ");
+				}
+				else {
+					stringBitboard.append("0 ");
+				}
+			}
+			stringBitboard.append("\n");
+		}
+		stringBitboard.append("   -----------------\n");
+		stringBitboard.append("    A B C D E F G H");
+
+		return stringBitboard;
+	}
 };

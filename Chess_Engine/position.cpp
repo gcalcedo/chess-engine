@@ -40,31 +40,3 @@ u64 Position::getBoard(Color color, Piece piece) {
 	case KING: return color == Color::WHITE ? white_kings : black_kings;
 	}
 }
-
-void Position::printBoard() {
-	for (size_t x = 0; x < 8; ++x) {
-		for (size_t y = 0; y < 8; ++y) {
-			std::cout << board[x][y] << " ";
-		}
-		std::cout << "\n";
-	}
-}
-
-void Position::printBitBoard(long long value) {
-	for (size_t x = 0; x < 8; ++x) {
-		for (size_t y = 0; y < 8; ++y) {
-			int idx = 63 - (x * 8 + y);
-
-			if ((1ll << idx) & value) {
-				std::cout << "1 ";
-			}
-			else {
-				std::cout << "0 ";
-			}
-		}
-
-		std::cout << std::endl;
-	}
-
-	std::cout << std::endl;
-}

@@ -39,6 +39,12 @@ private:
 
 	void genPawn();
 	void genKnight();
+	void genRook();
+	void genBishop();
+	void genQueen();
+
+	u64 rookLines(u64 piece);
+
 	void appendMoves(u64 source, Direction move, char moveFlags);
 	void appendPromotions(u64 source, Direction move, char moveFlags);
 };
