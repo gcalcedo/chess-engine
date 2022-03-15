@@ -43,9 +43,10 @@ private:
 	void genBishop();
 	void genQueen();
 
-	u64 rookLines(u64 piece);
+	u64 slide(u64 piece, u64 line);
 
 	void appendMoves(u64 source, Direction move, char moveFlags);
 	void appendPromotions(u64 source, Direction move, char moveFlags);
+	void appendMoveMask(Square piece, u64 mask, char moveFlags);
 };
 

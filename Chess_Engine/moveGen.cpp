@@ -1,5 +1,8 @@
 #include "moveGen.h"
+
 #include <chrono>
+#include "utilities.h"
+#include "boardMapper.h"
 
 MoveGen::MoveGen(Position& position) : pos(position) {}
 
@@ -17,6 +20,8 @@ void MoveGen::genMoves(Color color) {
 	genPawn();
 	genKnight();
 	genRook();
+	genBishop();
+	genQueen();
 	auto stop = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = stop - start;
 
@@ -25,21 +30,6 @@ void MoveGen::genMoves(Color color) {
 	}
 
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
-
-	/*
-	std::string board =
-		"01000000"
-		"00100000"
-		"00010000"
-		"00001000"
-		"00000100"
-		"00000010"
-		"00000001"
-		"00000000";
-
-	std::cout << std::stoull(board, nullptr, 2) << std::endl;
-	std::cout << RANK_5 << std::endl;
-	*/
 }
 
 u64 MoveGen::white_mask() {
@@ -95,44 +85,61 @@ void MoveGen::genRook() {
 	unsigned long idx;
 	while (rooks != 0) {
 		_BitScanForward64(&idx, rooks);
-		std::cout << Stringify::bitboard(rookLines(0x1ULL << idx)) << std::endl;
+		u64 rook = 0x1ULL << idx;
+
+		u64 horizontal = slide(rook, BoardMapper::getFile((Square)idx));
+		u64 vertical = slide(rook, BoardMapper::getRank((Square)idx));
+		u64 moves = (horizontal | vertical) & ~player;
+
+		appendMoveMask((Square)idx, moves & empty, QUIET);
+		appendMoveMask((Square)idx, moves & rival, CAPTURE);
+
 		rooks ^= 1ULL << idx;
 	}
 }
 
+void MoveGen::genBishop() {
+	u64 bishops = pos.getBoard(turn, BISHOP);
 
-template <typename T, T m, int k>
-static inline T swapbits(T p) {
-	T q = ((p >> k) ^ p) & m;
-	return p ^ q ^ (q << k);
+	unsigned long idx;
+	while (bishops != 0) {
+		_BitScanForward64(&idx, bishops);
+		u64 bishop = 0x1ULL << idx;
+
+		u64 diagonal = slide(bishop, BoardMapper::getDiagonal((Square)idx));
+		u64 antiDiagonal = slide(bishop, BoardMapper::getAntiDiagonal((Square)idx));
+		u64 moves = (diagonal | antiDiagonal) & ~player;
+
+		appendMoveMask((Square)idx, moves & empty, QUIET);
+		appendMoveMask((Square)idx, moves & rival, CAPTURE);
+
+		bishops ^= 1ULL << idx;
+	}
 }
 
-uint64_t rev(uint64_t n)
-{
-	static const uint64_t m1 = ((uint64_t(1) << 63) - 1) / (1 + (1 << 1) + (1 << 2));
-	static const uint64_t m2 = ((uint64_t(1) << 63) - 1) / (1 + (1 << 3) + (1 << 6));
-	static const uint64_t m3 = ((uint64_t(1) << 9) - 1) + (((uint64_t(1) << 9) - 1) << 36);
-	static const uint64_t m4 = (uint64_t(1) << 27) - 1;
-	n = swapbits<uint64_t, m1, 2>(n);
-	n = swapbits<uint64_t, m2, 6>(n);
-	n = swapbits<uint64_t, m3, 18>(n);
-	n = swapbits<uint64_t, m4, 36>(n);
-	n = (n >> 63) | (n << 1);
-	return n;
+void MoveGen::genQueen() {
+	u64 queens = pos.getBoard(turn, QUEEN);
+
+	unsigned long idx;
+	while (queens != 0) {
+		_BitScanForward64(&idx, queens);
+		u64 queen = 0x1ULL << idx;
+
+		u64 horizontal = slide(queen, BoardMapper::getFile((Square)idx));
+		u64 vertical = slide(queen, BoardMapper::getRank((Square)idx));
+		u64 diagonal = slide(queen, BoardMapper::getDiagonal((Square)idx));
+		u64 antiDiagonal = slide(queen, BoardMapper::getAntiDiagonal((Square)idx));
+		u64 moves = (horizontal | vertical | diagonal | antiDiagonal) & ~player;
+
+		appendMoveMask((Square)idx, moves & empty, QUIET);
+		appendMoveMask((Square)idx, moves & rival, CAPTURE);
+
+		queens ^= 1ULL << idx;
+	}
 }
 
-u64 MoveGen::rookLines(u64 piece) {
-	u64 lines = 0x0ULL;
-
-	u64 horizontal = ((occupied - 2 * piece) ^ rev(rev(occupied) - 2 * rev(piece))) & RANK_5;
-	u64 vertical = (((occupied & FILE_E) - (2 * piece)) ^ rev(rev(occupied & FILE_E) - 2 * rev(piece))) & FILE_E;
-
-	std::cout << Stringify::bitboard(horizontal) << std::endl;
-	std::cout << Stringify::bitboard(vertical) << std::endl;
-
-	lines = (horizontal | vertical) & ~player;
-
-	return lines;
+u64 MoveGen::slide(u64 piece, u64 line) {
+	return (((occupied & line) - (2 * piece)) ^ util::rev(util::rev(occupied & line) - 2 * util::rev(piece))) & line;
 }
 
 
@@ -154,5 +161,14 @@ void MoveGen::appendPromotions(u64 source, Direction move, char moveFlags) {
 		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | BISHOP | moveFlags));
 		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | QUEEN | moveFlags));
 		source ^= 1ULL << idx;
+	}
+}
+
+void MoveGen::appendMoveMask(Square piece, u64 mask, char moveFlags) {
+	unsigned long idx;
+	while (mask != 0) {
+		_BitScanForward64(&idx, mask);
+		moves.push_back(Move(piece, (Square)idx, moveFlags));
+		mask ^= 1ULL << idx;
 	}
 }
