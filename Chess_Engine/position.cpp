@@ -1,4 +1,5 @@
 #include "position.h"
+#include "boardMask.h"
 
 Position::Position(std::string fen) {
 	init();
@@ -39,4 +40,65 @@ u64 Position::getBoard(Color color, Piece piece) {
 	case QUEEN: return color == Color::WHITE ? white_queens : black_queens;
 	case KING: return color == Color::WHITE ? white_kings : black_kings;
 	}
+}
+
+int Position::moveCount() {
+	return history.size();
+}
+
+Move Position::lastMove() {
+	return history.back();
+}
+
+u64* Position::boardReference(Square square) {
+	if ((white_pawns & BoardMask::board(square)) != 0) return &white_pawns;
+	if ((white_rooks & BoardMask::board(square)) != 0) return &white_rooks;
+	if ((white_knights & BoardMask::board(square)) != 0) return &white_knights;
+	if ((white_bishops & BoardMask::board(square)) != 0) return &white_bishops;
+	if ((white_queens & BoardMask::board(square)) != 0) return &white_queens;
+	if ((white_kings & BoardMask::board(square)) != 0) return &white_kings;
+	if ((black_pawns & BoardMask::board(square)) != 0) return &black_pawns;
+	if ((black_rooks & BoardMask::board(square)) != 0) return &black_rooks;
+	if ((black_knights & BoardMask::board(square)) != 0) return &black_knights;
+	if ((black_bishops & BoardMask::board(square)) != 0) return &black_bishops;
+	if ((black_queens & BoardMask::board(square)) != 0) return &black_queens;
+	if ((black_kings & BoardMask::board(square)) != 0) return &black_kings;
+	return nullptr;
+}
+
+void Position::makeMove(Move move) {
+	if (move.isCapture()) {
+		if (move.isEnPassant()) {
+			move.capturedSquare = (Square) (turn == Color::BLACK ? (move.to() + 8) : (move.to() - 8));
+		}
+		else {
+			move.capturedSquare = move.to();
+		}
+
+		u64* captured = boardReference(move.capturedSquare);
+		*captured &= ~BoardMask::board(move.capturedSquare);
+		move.capture = captured;
+	}
+
+	u64* board = boardReference(move.from());
+	*board &= ~BoardMask::board(move.from());
+	*board |= BoardMask::board(move.to());
+
+	history.push_back(move);
+	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;
+}
+
+void Position::unMakeMove() {
+	Move move = lastMove();
+
+	u64* board = boardReference(move.to());
+	*board &= ~BoardMask::board(move.to());
+	*board |= BoardMask::board(move.from());
+
+	if (move.isCapture()) {
+		*move.capture |= BoardMask::board(move.capturedSquare);
+	}
+
+	history.pop_back();
+	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;
 }

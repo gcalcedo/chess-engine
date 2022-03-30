@@ -1,31 +1,37 @@
 #pragma once
 
 #include "position.h"
+#include <map>
 
 class MoveGen
 {
 private:
 	Position& pos;
-	Color turn = Color::WHITE;
 
 	u64 player = 0ULL;
 	u64 rival = 0ULL;
 	u64 occupied = 0ULL;
 	u64 empty = 0ULL;
+	u64 guarded = 0ULL;
+	u64 pinned = 0ULL;
+	std::map<Square, u64> pinDirections;
+	u64 checkResponses = 0ULL;
 
 public:
 	MoveGen(Position& position);
 
 	std::vector<Move> moves;
 
-	void genMoves(Color color);
+	void genMoves();
+	long long perft(int depth, int initial);
 
 private:
+	int mod(int a, int b) { return a >= 0 ? a % b : (b - abs(a % b)) % b; }
 
 	template <Direction D> u64 move(u64 board) {
 		bool shiftLeft = D > 0;
-		bool isEast = D % 8 == 7; bool isDoubleEast = D % 8 == 6;
-		bool isWest = D % 8 == 1; bool isDoubleWest = D % 8 == 2;
+		bool isEast = mod(D, 8) == 7; bool isDoubleEast = mod(D, 8) == 6;
+		bool isWest = mod(D, 8) == 1; bool isDoubleWest = mod(D, 8) == 2;
 		int magnitude = abs(D);
 
 		if (isEast) board = board & ~FILE_H; if (isDoubleEast) board = board & ~FILE_H & ~FILE_G;
@@ -37,16 +43,22 @@ private:
 	u64 white_mask();
 	u64 black_mask();
 
+	void genGuard();
+
 	void genPawn();
 	void genKnight();
-	void genRook();
-	void genBishop();
-	void genQueen();
+	void genKing();
+	void genSlidingPiece(u64 pieces, Piece pieceType);
 
-	u64 slide(u64 piece, u64 line);
+	u64 slideLine(u64 piece, u64 line, u64 occ=NULL);
+	u64 slidingAttack(Square square, Piece pieceType, u64 occ=NULL);
+	u64 xRayAttack(Square square, Piece pieceType, u64 blockers);
 
 	void appendMoves(u64 source, Direction move, char moveFlags);
 	void appendPromotions(u64 source, Direction move, char moveFlags);
 	void appendMoveMask(Square piece, u64 mask, char moveFlags);
+	void appendGuard(Square piece, u64 mask);
+
+	bool isSquareEmpty(Square square);
 };
 

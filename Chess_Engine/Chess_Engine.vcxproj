@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="boardMapper.cpp" />
+    <ClCompile Include="boardMask.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="moveGen.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="boardMapper.h" />
+    <ClInclude Include="boardMask.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="moveGen.h" />
     <ClInclude Include="stringify.h" />

@@ -24,4 +24,8 @@ namespace util {
 		n = (n >> 63) | (n << 1);
 		return n;
 	}
+
+	void print(std::string printArg) {
+		std::cout << printArg << std::endl;
+	}
 }

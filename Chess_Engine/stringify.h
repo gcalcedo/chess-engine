@@ -22,9 +22,9 @@ public:
 
 	static std::string piece(Piece piece) {
 		switch (piece) {
-		case 0: return "ROOK";
-		case 1: return "KNIGHT";
-		case 2: return "BISHOP";
+		case 0: return "KNIGHT";
+		case 1: return "BISHOP";
+		case 2: return "ROOK";
 		case 3: return "QUEEN";
 		case 4: return "KING";
 		case 5: return "PAWN";

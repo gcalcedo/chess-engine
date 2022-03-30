@@ -17,9 +17,9 @@ enum class Color {
 };
 
 enum Piece {
-	ROOK,
 	KNIGHT,
 	BISHOP,
+	ROOK,
 	QUEEN,
 	KING,
 	PAWN
@@ -121,6 +121,13 @@ enum Square {
 	S_H7, S_G7, S_F7, S_E7, S_D7, S_C7, S_B7, S_A7,
 	S_H8, S_G8, S_F8, S_E8, S_D8, S_C8, S_B8, S_A8,
 };
+
+enum Side : u64 {
+	QUEEN_SIDE = FILE_A | FILE_B | FILE_C | FILE_D,
+	KING_SIDE = FILE_E | FILE_F | FILE_G | FILE_H,
+	WHITE_SIDE = RANK_1 | RANK_2 | RANK_3 | RANK_4,
+	BLACK_SIDE = RANK_5 | RANK_6 | RANK_7 | RANK_8
+};
 #pragma endregion
 
 #pragma region Moves
@@ -130,8 +137,10 @@ typedef unsigned short u16;
 enum MoveType {
 	QUIET,
 	DOUBLE_PAWN_PUSH = 1,
-	EN_PASSANT = 5,
+	KING_SIDE_CASTLE = 2,
+	QUEEN_SIDE_CASTLE = 3,
 	CAPTURE = 4,
+	EN_PASSANT = 5,
 	PROMOTION = 8,
 };
 
@@ -151,15 +160,20 @@ public:
 		data += flags;
 	}
 
-	Square getFrom() { return (Square)((data >> 10) & 63); }
-	Square getTo() { return (Square)((data >> 4) & 63); }
+	u64* capture;
+	Square capturedSquare;
+
+	Square from() { return (Square)((data >> 10) & 63); }
+	Square to() { return (Square)((data >> 4) & 63); }
 	Piece getPromotion() { return (Piece)(data & 3); }
 
-	bool isQuiet() { return (data & 15) == 0; }
-	bool isDoublePawnPush() { return (data & 15) == 1; }
-	bool isEnPassant() { return (data & 15) == 5; }
-	bool isCapture() { return (data & 4) == 4; }
-	bool isPromotion() { return (data & 8) == 8; }
+	bool isQuiet() { return (data & 15) == QUIET; }
+	bool isDoublePawnPush() { return (data & 15) == DOUBLE_PAWN_PUSH; }
+	bool isEnPassant() { return (data & 15) == EN_PASSANT; }
+	bool isCapture() { return (data & 4) == CAPTURE; }
+	bool isPromotion() { return (data & 8) == PROMOTION; }
+	bool isKingSideCastle() { return (data & 15) == KING_SIDE_CASTLE; }
+	bool isQueenSIdeCastle() { return (data & 15) == QUEEN_SIDE_CASTLE; }
 
 	void print() {
 		for (size_t i = 1; i <= 16; i++) {
@@ -173,12 +187,15 @@ public:
 		}
 
 		std::cout << "-> "
-			<< Stringify::square(getFrom()) << "-"
-			<< Stringify::square(getTo());
+			<< Stringify::square(from()) << "-"
+			<< Stringify::square(to());
 
 		if (isDoublePawnPush()) std::cout << " | Double Pawn Push";
 		if (isCapture()) std::cout << " | Capture";
 		if (isPromotion()) std::cout << " | Promotion [" << Stringify::piece(getPromotion()) << "]";
+		if (isEnPassant()) std::cout << " | En-Passant";
+		if (isKingSideCastle()) std::cout << " | King Side Castle";
+		if (isQueenSIdeCastle()) std::cout << " | Queen Side Castle";
 
 		std::cout << std::endl;
 	}

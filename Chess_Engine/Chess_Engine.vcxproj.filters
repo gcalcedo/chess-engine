@@ -24,7 +24,7 @@
     <ClCompile Include="moveGen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="boardMapper.cpp">
+    <ClCompile Include="boardMask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,7 +44,7 @@
     <ClInclude Include="utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="boardMapper.h">
+    <ClInclude Include="boardMask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
