@@ -162,6 +162,7 @@ public:
 
 	u64* capture;
 	Square capturedSquare;
+	char castlingRights = 0;
 
 	Square from() { return (Square)((data >> 10) & 63); }
 	Square to() { return (Square)((data >> 4) & 63); }
@@ -173,7 +174,7 @@ public:
 	bool isCapture() { return (data & 4) == CAPTURE; }
 	bool isPromotion() { return (data & 8) == PROMOTION; }
 	bool isKingSideCastle() { return (data & 15) == KING_SIDE_CASTLE; }
-	bool isQueenSIdeCastle() { return (data & 15) == QUEEN_SIDE_CASTLE; }
+	bool isQueenSideCastle() { return (data & 15) == QUEEN_SIDE_CASTLE; }
 
 	void print() {
 		for (size_t i = 1; i <= 16; i++) {
@@ -195,7 +196,7 @@ public:
 		if (isPromotion()) std::cout << " | Promotion [" << Stringify::piece(getPromotion()) << "]";
 		if (isEnPassant()) std::cout << " | En-Passant";
 		if (isKingSideCastle()) std::cout << " | King Side Castle";
-		if (isQueenSIdeCastle()) std::cout << " | Queen Side Castle";
+		if (isQueenSideCastle()) std::cout << " | Queen Side Castle";
 
 		std::cout << std::endl;
 	}

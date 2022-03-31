@@ -28,8 +28,13 @@ u64 BoardMask::board(Square square) {
 	return (0x1ULL << square);
 }
 
-u64 BoardMask::enPassant(Move move) {
-	return (0x1ULL << move.to()) << 8;
+u64 BoardMask::enPassant(Move move, Color playingColor) {
+	if (playingColor == Color::WHITE) {
+		return (0x1ULL << move.to()) << 8;
+	}
+	else {
+		return (0x1ULL << move.to()) >> 8;
+	}
 }
 
 Square BoardMask::square(u64 board) {

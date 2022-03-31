@@ -16,7 +16,7 @@ public:
 	static AntiDiagonal antiDiagonal(Square square);
 
 	static u64 board(Square square);
-	static u64 enPassant(Move move);
+	static u64 enPassant(Move move, Color playingColor);
 
 	static Square square(u64 board);
 };

@@ -67,6 +67,11 @@ u64* Position::boardReference(Square square) {
 }
 
 void Position::makeMove(Move move) {
+	if (castling.white_kcastle == true) move.castlingRights += 1;
+	if (castling.white_qcastle == true) move.castlingRights += 2;
+	if (castling.black_kcastle == true) move.castlingRights += 4;
+	if (castling.black_qcastle == true) move.castlingRights += 8;
+
 	if (move.isCapture()) {
 		if (move.isEnPassant()) {
 			move.capturedSquare = (Square) (turn == Color::BLACK ? (move.to() + 8) : (move.to() - 8));
@@ -78,11 +83,51 @@ void Position::makeMove(Move move) {
 		u64* captured = boardReference(move.capturedSquare);
 		*captured &= ~BoardMask::board(move.capturedSquare);
 		move.capture = captured;
+
+		if (captured == &white_rooks && move.to() == S_H1) castling.white_kcastle = false;
+		if (captured == &white_rooks && move.to() == S_A1) castling.white_qcastle = false;
+		if (captured == &black_rooks && move.to() == S_H8) castling.black_kcastle = false;
+		if (captured == &black_rooks && move.to() == S_A8) castling.black_qcastle = false;
 	}
 
 	u64* board = boardReference(move.from());
 	*board &= ~BoardMask::board(move.from());
 	*board |= BoardMask::board(move.to());
+
+	if (board == &white_kings) {
+		castling.white_kcastle = false;
+		castling.white_qcastle = false;
+		if (move.isKingSideCastle()) {
+			u64* whiteRooks = boardReference(S_H1);
+			*whiteRooks &= ~BoardMask::board(S_H1);
+			*whiteRooks |= BoardMask::board(S_F1);
+		}
+		if (move.isQueenSideCastle()) {
+			u64* whiteRooks = boardReference(S_A1);
+			*whiteRooks &= ~BoardMask::board(S_A1);
+			*whiteRooks |= BoardMask::board(S_D1);
+		}
+	}
+
+	if (board == &black_kings) {
+		castling.black_kcastle = false;
+		castling.black_qcastle = false;
+		if (move.isKingSideCastle()) {
+			u64* blackRooks = boardReference(S_H8);
+			*blackRooks &= ~BoardMask::board(S_H8);
+			*blackRooks |= BoardMask::board(S_F8);
+		}
+		if (move.isQueenSideCastle()) {
+			u64* blackRooks = boardReference(S_A8);
+			*blackRooks &= ~BoardMask::board(S_A8);
+			*blackRooks |= BoardMask::board(S_D8);
+		}
+	}
+
+	if (board == &white_rooks && move.from() == S_H1) castling.white_kcastle = false;
+	if (board == &white_rooks && move.from() == S_A1) castling.white_qcastle = false;
+	if (board == &black_rooks && move.from() == S_H8) castling.black_kcastle = false;
+	if (board == &black_rooks && move.from() == S_A8) castling.black_qcastle = false;
 
 	history.push_back(move);
 	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;
@@ -95,9 +140,40 @@ void Position::unMakeMove() {
 	*board &= ~BoardMask::board(move.to());
 	*board |= BoardMask::board(move.from());
 
+	if (board == &white_kings) {
+		if (move.isKingSideCastle()) {
+			u64* whiteRooks = boardReference(S_F1);
+			*whiteRooks &= ~BoardMask::board(S_F1);
+			*whiteRooks |= BoardMask::board(S_H1);
+		}
+		if (move.isQueenSideCastle()) {
+			u64* whiteRooks = boardReference(S_D1);
+			*whiteRooks &= ~BoardMask::board(S_D1);
+			*whiteRooks |= BoardMask::board(S_A1);
+		}
+	}
+
+	if (board == &black_kings) {
+		if (move.isKingSideCastle()) {
+			u64* blackRooks = boardReference(S_F8);
+			*blackRooks &= ~BoardMask::board(S_F8);
+			*blackRooks |= BoardMask::board(S_H8);
+		}
+		if (move.isQueenSideCastle()) {
+			u64* blackRooks = boardReference(S_D8);
+			*blackRooks &= ~BoardMask::board(S_D8);
+			*blackRooks |= BoardMask::board(S_A8);
+		}
+	}
+
 	if (move.isCapture()) {
 		*move.capture |= BoardMask::board(move.capturedSquare);
 	}
+
+	castling.white_kcastle = (move.castlingRights & 1) == 0 ? false : true;
+	castling.white_qcastle = (move.castlingRights & 2) == 0 ? false : true;
+	castling.black_kcastle = (move.castlingRights & 4) == 0 ? false : true;
+	castling.black_qcastle = (move.castlingRights & 8) == 0 ? false : true;
 
 	history.pop_back();
 	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;

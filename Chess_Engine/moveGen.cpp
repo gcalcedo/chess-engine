@@ -52,8 +52,8 @@ void MoveGen::genPawn() {
 
 		//En-Passant
 		if (pos.moveCount() > 0 && pos.lastMove().isDoublePawnPush()) {
-			appendMoves(move<NORTH_EAST>(pawns & RANK_5) & BoardMask::enPassant(pos.lastMove()), SOUTH_WEST, EN_PASSANT);
-			appendMoves(move<NORTH_WEST>(pawns & RANK_5) & BoardMask::enPassant(pos.lastMove()), SOUTH_EAST, EN_PASSANT);
+			appendMoves(move<NORTH_EAST>(pawns & RANK_5) & BoardMask::enPassant(pos.lastMove(), pos.turn), SOUTH_WEST, EN_PASSANT);
+			appendMoves(move<NORTH_WEST>(pawns & RANK_5) & BoardMask::enPassant(pos.lastMove(), pos.turn), SOUTH_EAST, EN_PASSANT);
 		}
 	}
 	else {
@@ -72,8 +72,8 @@ void MoveGen::genPawn() {
 
 		//En-Passant
 		if (pos.moveCount() > 0 && pos.lastMove().isDoublePawnPush()) {
-			appendMoves(move<SOUTH_EAST>(pawns & RANK_4) & BoardMask::enPassant(pos.lastMove()), NORTH_WEST, EN_PASSANT);
-			appendMoves(move<SOUTH_WEST>(pawns & RANK_4) & BoardMask::enPassant(pos.lastMove()), NORTH_EAST, EN_PASSANT);
+			appendMoves(move<SOUTH_EAST>(pawns & RANK_4) & BoardMask::enPassant(pos.lastMove(), pos.turn), NORTH_WEST, EN_PASSANT);
+			appendMoves(move<SOUTH_WEST>(pawns & RANK_4) & BoardMask::enPassant(pos.lastMove(), pos.turn), NORTH_EAST, EN_PASSANT);
 		}
 	}
 }
@@ -175,24 +175,24 @@ void MoveGen::genKing() {
 		appendMoveMask((Square)idx, kingMove & empty, QUIET);
 		appendMoveMask((Square)idx, kingMove & rival, CAPTURE);
 
-		/*
-		if (pos.turn == Color::WHITE) {
-			if (pos.castling.white_kcastle = true && isSquareEmpty(S_F1) && isSquareEmpty(S_G1)) {
-				moves.push_back(Move(Square(idx), S_G1, KING_SIDE_CASTLE));
+		if ((pos.getBoard(pos.turn, KING) & guarded) == 0) {
+			if (pos.turn == Color::WHITE) {
+				if (pos.castling.white_kcastle == true && isSquareSafe(S_F1) && isSquareSafe(S_G1)) {
+					moves.push_back(Move(Square(idx), S_G1, KING_SIDE_CASTLE));
+				}
+				if (pos.castling.white_qcastle == true && isSquareSafe(S_D1) && isSquareSafe(S_C1) && isSquareSafe(S_B1)) {
+					moves.push_back(Move(Square(idx), S_C1, QUEEN_SIDE_CASTLE));
+				}
 			}
-			if (pos.castling.white_qcastle = true && isSquareEmpty(S_D1) && isSquareEmpty(S_C1) && isSquareEmpty(S_B1)) {
-				moves.push_back(Move(Square(idx), S_C1, QUEEN_SIDE_CASTLE));
+			else {
+				if (pos.castling.black_kcastle == true && isSquareSafe(S_F8) && isSquareSafe(S_G8)) {
+					moves.push_back(Move(Square(idx), S_G8, KING_SIDE_CASTLE));
+				}
+				if (pos.castling.black_qcastle == true && isSquareSafe(S_D8) && isSquareSafe(S_C8) && isSquareSafe(S_B8)) {
+					moves.push_back(Move(Square(idx), S_C8, QUEEN_SIDE_CASTLE));
+				}
 			}
 		}
-		else {
-			if (pos.castling.black_kcastle = true && isSquareEmpty(S_F8) && isSquareEmpty(S_G8)) {
-				moves.push_back(Move(Square(idx), S_G8, KING_SIDE_CASTLE));
-			}
-			if (pos.castling.black_qcastle = true && isSquareEmpty(S_D8) && isSquareEmpty(S_C8) && isSquareEmpty(S_B8)) {
-				moves.push_back(Move(Square(idx), S_C8, QUEEN_SIDE_CASTLE));
-			}
-		}
-		*/
 
 		kings ^= 0x1ULL << idx;
 	}
@@ -246,16 +246,6 @@ void MoveGen::appendMoveMask(Square piece, u64 mask, char moveFlags) {
 	unsigned long idx;
 	while (mask != 0) {
 		_BitScanForward64(&idx, mask);
-
-		/*
-		if ((pos.getBoard(pos.turn, KING) & guarded) != 0) {
-			if ((BoardMask::board((Square)idx) & checkResponses) == 0) {
-				mask ^= 1ULL << idx;
-				continue;
-			}
-		}
-		*/
-
 		moves.push_back(Move(piece, (Square)idx, moveFlags));
 		mask ^= 1ULL << idx;
 	}
@@ -270,8 +260,8 @@ void MoveGen::appendGuard(Square piece, u64 mask) {
 	}
 }
 
-bool MoveGen::isSquareEmpty(Square square) {
-	return ((0x1ULL << square) & occupied) == 0;
+bool MoveGen::isSquareSafe(Square square) {
+	return (BoardMask::board(square) & occupied) == 0 && (BoardMask::board(square) & guarded) == 0;
 }
 
 bool show = false;
@@ -287,56 +277,20 @@ long long MoveGen::perft(int depth, int initial) {
 		long long count = 0;
 
 		for (Move m : depthMoves) {
+
 			pos.makeMove(m);
 
 			long long partial = perft(depth - 1, initial);
+		
 
-			/*
-			if (depth == initial && m.from() == S_F2 && m.to() == S_F3) {
-				std::cout << initial << " ---------------- " << partial << " - ";
-				m.print();
-			}
-			
-			
-			if (depth == initial - 1 && m.from() == S_G8 && m.to() == S_H6
-				&& pos.history.at(0).from() == S_F2 && pos.history.at(0).to() == S_F3) {
-				std::cout << initial - 1 << " ------------ " << partial << " - ";
-				m.print();
-			}
-			
-			
-			if (depth == initial - 2 && m.from() == S_E1 && m.to() == S_F2 
-				&& pos.history.at(1).from() == S_G8 && pos.history.at(1).to() == S_H6
-				&& pos.history.at(0).from() == S_F2 && pos.history.at(0).to() == S_F3) {
-				std::cout << initial - 2 << " -------- " << partial << " - ";
-				m.print();
-			}
-			
-			
-			if (depth == initial - 3 // && m.from() == S_D8 && m.to() == S_A5
-				&& pos.history.at(2).from() == S_E1 && pos.history.at(2).to() == S_F2
-				&& pos.history.at(1).from() == S_G8 && pos.history.at(1).to() == S_H6
-				&& pos.history.at(0).from() == S_F2 && pos.history.at(0).to() == S_F3) {
-				std::cout << initial - 2 << " -------- " << partial << " - ";
-				m.print();
-			}
-
-			
-			if (depth == initial - 4  && m.from() == S_D8 && m.to() == S_A5
-				&& pos.history.at(3).from() == S_D8 && pos.history.at(3).to() == S_A5
-				&& pos.history.at(2).from() == S_D2 && pos.history.at(2).to() == S_D4
-				&& pos.history.at(1).from() == S_C7 && pos.history.at(1).to() == S_C5
-				&& pos.history.at(0).from() == S_B2 && pos.history.at(0).to() == S_B4) {
-				std::cout << initial - 2 << " -------- " << partial << " - ";
-				m.print();
-			}
-			*/
+			//if (depth == initial) {
+			//	std::cout << partial << " - ";
+			//	m.print();
+			//}
 
 			count += partial;
 
 			pos.unMakeMove();
-
-
 		}
 		return count;
 	}
@@ -428,7 +382,7 @@ void MoveGen::genGuard() {
 	while (pinners != 0) {
 		_BitScanForward64(&idx, pinners);
 
-		u64 pin = slidingAttack((Square)idx, ROOK) & player;
+		u64 pin = slidingAttack((Square)idx, ROOK) & player & slidingAttack(selfKing, ROOK);
 		Square pinnedSquare = BoardMask::square(pin);
 		u64 pinDirectionKing = slidingAttack(pinnedSquare, ROOK) & slidingAttack(selfKing, ROOK);
 		u64 pinDirectionPinner = slidingAttack(pinnedSquare, ROOK) & slidingAttack((Square)idx, ROOK);
@@ -444,7 +398,7 @@ void MoveGen::genGuard() {
 	while (pinners != 0) {
 		_BitScanForward64(&idx, pinners);
 
-		u64 pin = slidingAttack((Square)idx, BISHOP) & player;
+		u64 pin = slidingAttack((Square)idx, BISHOP) & player & slidingAttack(selfKing, BISHOP);
 		Square pinnedSquare = BoardMask::square(pin);
 		u64 pinDirectionKing = slidingAttack(pinnedSquare, BISHOP) & slidingAttack(selfKing, BISHOP);
 		u64 pinDirectionPinner = slidingAttack(pinnedSquare, BISHOP) & slidingAttack((Square)idx, BISHOP);
@@ -459,11 +413,13 @@ void MoveGen::genGuard() {
 
 	//CHECK COVER
 	checkResponses = 0;
+	checkers = 0;
 
 	u64 rookCheckers = pos.getBoard(enemyColor, ROOK) | pos.getBoard(enemyColor, QUEEN);
 	u64 rookKing = slidingAttack(selfKing, ROOK);
 	rookCheckers &= rookKing;
 	while (rookCheckers != 0) {
+		checkers++;
 		_BitScanForward64(&idx, rookCheckers);
 		Square checkingSquare = (Square)idx;
 
@@ -478,6 +434,7 @@ void MoveGen::genGuard() {
 	u64 bishopKing = slidingAttack(selfKing, BISHOP);
 	bishopCheckers &= bishopKing;
 	while (bishopCheckers != 0) {
+		checkers++;
 		_BitScanForward64(&idx, bishopCheckers);
 		Square checkingSquare = (Square)idx;
 
@@ -500,8 +457,30 @@ void MoveGen::genGuard() {
 
 		if ((knightMove & pos.getBoard(pos.turn, KING)) != 0) {
 			checkResponses |= BoardMask::board((Square)idx);
+			checkers++;
 		}
 
 		knights ^= 0x1ULL << idx;
 	}
+
+	if (enemyColor == Color::WHITE) {
+		u64 checks = move<NORTH_EAST>(pos.getBoard(enemyColor, PAWN)) & pos.getBoard(pos.turn, KING);
+		if (checks != 0) checkers++;
+		checkResponses |= move<SOUTH_WEST>(checks);
+		
+		checks = move<NORTH_WEST>(pos.getBoard(enemyColor, PAWN)) & pos.getBoard(pos.turn, KING);
+		if (checks != 0) checkers++;
+		checkResponses |= move<SOUTH_EAST>(checks);
+	}
+	else {
+		u64 checks = move<SOUTH_EAST>(pos.getBoard(enemyColor, PAWN)) & pos.getBoard(pos.turn, KING);
+		if (checks != 0) checkers++;
+		checkResponses |= move<NORTH_WEST>(checks);
+
+		checks = move<SOUTH_WEST>(pos.getBoard(enemyColor, PAWN)) & pos.getBoard(pos.turn, KING);
+		if (checks != 0) checkers++;
+		checkResponses |= move<NORTH_EAST>(checks);
+	}
+
+	if (checkers >= 2) checkResponses = 0;
 }
