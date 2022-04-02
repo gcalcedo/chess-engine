@@ -66,6 +66,25 @@ u64* Position::boardReference(Square square) {
 	return nullptr;
 }
 
+u64* Position::boardReference(Color color, Piece piece) {
+	if (color == Color::WHITE) {
+		if (piece == KNIGHT) return &white_knights;
+		if (piece == BISHOP) return &white_bishops;
+		if (piece == ROOK) return &white_rooks;
+		if (piece == QUEEN) return &white_queens;
+		if (piece == KING) return &white_kings;
+		if (piece == PAWN) return &white_pawns;
+	}
+	else {
+		if (piece == KNIGHT) return &black_knights;
+		if (piece == BISHOP) return &black_bishops;
+		if (piece == ROOK) return &black_rooks;
+		if (piece == QUEEN) return &black_queens;
+		if (piece == KING) return &black_kings;
+		if (piece == PAWN) return &black_pawns;
+	}
+}
+
 void Position::makeMove(Move move) {
 	if (castling.white_kcastle == true) move.castlingRights += 1;
 	if (castling.white_qcastle == true) move.castlingRights += 2;
@@ -74,7 +93,7 @@ void Position::makeMove(Move move) {
 
 	if (move.isCapture()) {
 		if (move.isEnPassant()) {
-			move.capturedSquare = (Square) (turn == Color::BLACK ? (move.to() + 8) : (move.to() - 8));
+			move.capturedSquare = (Square)(turnColor == Color::BLACK ? (move.to() + 8) : (move.to() - 8));
 		}
 		else {
 			move.capturedSquare = move.to();
@@ -129,12 +148,23 @@ void Position::makeMove(Move move) {
 	if (board == &black_rooks && move.from() == S_H8) castling.black_kcastle = false;
 	if (board == &black_rooks && move.from() == S_A8) castling.black_qcastle = false;
 
+	if (move.isPromotion()) {
+		*board &= ~BoardMask::board(move.to());
+		*boardReference(turnColor, move.getPromotion()) |= BoardMask::board(move.to());
+	}
+
 	history.push_back(move);
-	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;
+	turnColor = turnColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 }
 
 void Position::unMakeMove() {
+	turnColor = turnColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 	Move move = lastMove();
+
+	if (move.isPromotion()) {
+		*boardReference(turnColor, move.getPromotion()) &= ~BoardMask::board(move.to());
+		*boardReference(turnColor, PAWN) |= BoardMask::board(move.to());
+	}
 
 	u64* board = boardReference(move.to());
 	*board &= ~BoardMask::board(move.to());
@@ -176,5 +206,4 @@ void Position::unMakeMove() {
 	castling.black_qcastle = (move.castlingRights & 8) == 0 ? false : true;
 
 	history.pop_back();
-	turn = turn == Color::WHITE ? Color::BLACK : Color::WHITE;
 }

@@ -16,7 +16,8 @@ private:
 	u64 pinned = 0ULL;
 	std::map<Square, u64> pinDirections;
 	u64 checkResponses = 0ULL;
-	int checkers = 0;
+	u64 checkers = 0ULL;
+	int checkersCount = 0;
 
 public:
 	MoveGen(Position& position);
@@ -61,5 +62,6 @@ private:
 	void appendGuard(Square piece, u64 mask);
 
 	bool isSquareSafe(Square square);
+	bool isSquareEmpty(Square square);
 };
 

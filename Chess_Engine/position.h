@@ -9,19 +9,17 @@
 class Position
 {
 private:
-
-
+	std::vector<Move> history;
 	struct CastlingRights {
 		bool white_qcastle = true;
 		bool white_kcastle = true;
 		bool black_qcastle = true;
 		bool black_kcastle = true;
 	};
-public:
-	std::vector<Move> history;
 
+public:
 	CastlingRights castling;
-	Color turn = Color::WHITE;
+	Color turnColor = Color::WHITE;
 
 	u64 white_pawns = 0LL;
 	u64 white_rooks = 0LL;
@@ -36,6 +34,18 @@ public:
 	u64 black_bishops = 0LL;
 	u64 black_queens = 0LL;
 	u64 black_kings = 0LL;
+
+	//char board[8][8] =
+	//{
+	//	{'r', 'n', 'b', 'q', '-', 'k', '-', 'r'},
+	//	{'p', 'p', '-', 'P', 'b', 'p', 'p', 'p'},
+	//	{'-', '-', 'p', '-', '-', '-', '-', '-'},
+	//	{'-', '-', '-', '-', '-', '-', '-', '-'},
+	//	{'-', '-', 'B', '-', '-', '-', '-', '-'},
+	//	{'-', '-', '-', '-', '-', '-', '-', '-'},
+	//	{'P', 'P', 'P', '-', 'N', 'n', 'P', 'P'},
+	//	{'R', 'N', 'B', 'Q', 'K', '-', '-', 'R'}
+	//};
 
 	char board[8][8] =
 	{
@@ -62,5 +72,6 @@ public:
 
 private:
 	u64* boardReference(Square square);
+	u64* boardReference(Color color, Piece piece);
 };
 

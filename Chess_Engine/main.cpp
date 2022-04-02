@@ -7,7 +7,7 @@ int main() {
 
 	MoveGen& gen = *(new MoveGen(*position));
 
-	for (int i = 0; i < 9; i++) {
+	for (int i = 1; i < 9; i++) {
 		auto start = std::chrono::high_resolution_clock::now();
 
 		std::cout << gen.perft(i, i) << std::endl;
@@ -16,14 +16,4 @@ int main() {
 		std::chrono::duration<double> elapsed = stop - start;
 		std::cout << "elapsed time: " << elapsed.count() << " s\n";
 	}
-
-	//gen.genMoves();
-
-	//for (Move m : gen.moves) {
-	//	m.print();
-	//	position->makeMove(m);
-	//	position->unMakeMove();
-	//}
-
-	//std::cout << gen.moves.size() << std::endl;
 }
