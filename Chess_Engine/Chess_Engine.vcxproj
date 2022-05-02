@@ -20,14 +20,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="boardMask.cpp" />
+    <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="moveGen.cpp" />
+    <ClCompile Include="search.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boardMask.h" />
+    <ClInclude Include="evaluation.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="moveGen.h" />
+    <ClInclude Include="search.h" />
     <ClInclude Include="stringify.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="utilities.h" />

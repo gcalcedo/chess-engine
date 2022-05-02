@@ -7,6 +7,7 @@ class MoveGen
 {
 private:
 	Position& pos;
+	std::vector<Move> moves;
 
 	u64 player = 0ULL;
 	u64 rival = 0ULL;
@@ -22,10 +23,8 @@ private:
 public:
 	MoveGen(Position& position);
 
-	std::vector<Move> moves;
-
-	void genMoves();
-	long long perft(int depth, int initial);
+	std::vector<Move> genMoves();
+	long long perft(int depth);
 
 private:
 	int mod(int a, int b) { return a >= 0 ? a % b : (b - abs(a % b)) % b; }

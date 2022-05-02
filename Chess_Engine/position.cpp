@@ -207,3 +207,43 @@ void Position::unMakeMove() {
 
 	history.pop_back();
 }
+
+void extractBitboardString(u64 board, char token) {
+
+}
+
+void Position::print() {
+	char board[8][8];
+
+	for (size_t x = 0; x < 8; ++x) {
+		for (size_t y = 0; y < 8; ++y) {
+			int idx = 63 - (x * 8 + y);
+			u64 boardMask = BoardMask::board((Square) idx);
+
+			if ((boardMask & white_pawns) != 0) board[x][y] = 'P';
+			else if ((boardMask & white_knights) != 0) board[x][y] = 'N';
+			else if ((boardMask & white_bishops) != 0) board[x][y] = 'B';
+			else if ((boardMask & white_rooks) != 0) board[x][y] = 'R';
+			else if ((boardMask & white_queens) != 0) board[x][y] = 'Q';
+			else if ((boardMask & white_kings) != 0) board[x][y] = 'K';
+			else if ((boardMask & black_pawns) != 0) board[x][y] = 'p';
+			else if ((boardMask & black_knights) != 0) board[x][y] = 'n';
+			else if ((boardMask & black_bishops) != 0) board[x][y] = 'b';
+			else if ((boardMask & black_rooks) != 0) board[x][y] = 'r';
+			else if ((boardMask & black_queens) != 0) board[x][y] = 'q';
+			else if ((boardMask & black_kings) != 0) board[x][y] = 'k';
+			else board[x][y] = ' ';
+		}
+	}
+
+	for (size_t x = 0; x < 8; ++x) {
+		std::cout << x + 1 << " | ";
+		for (size_t y = 0; y < 8; ++y) {
+			std::cout << board[x][y] << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "    ---------------" << std::endl;
+	std::cout << "    A B C D E F G H" << std::endl;
+	std::cout << (turnColor == Color::WHITE ? "White" : "Black") << " to move." << std::endl;
+}

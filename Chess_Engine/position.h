@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "types.h"
+#include <map>
 
 class Position
 {
@@ -35,17 +36,24 @@ public:
 	u64 black_queens = 0LL;
 	u64 black_kings = 0LL;
 
-	//char board[8][8] =
-	//{
-	//	{'r', 'n', 'b', 'q', '-', 'k', '-', 'r'},
-	//	{'p', 'p', '-', 'P', 'b', 'p', 'p', 'p'},
-	//	{'-', '-', 'p', '-', '-', '-', '-', '-'},
-	//	{'-', '-', '-', '-', '-', '-', '-', '-'},
-	//	{'-', '-', 'B', '-', '-', '-', '-', '-'},
-	//	{'-', '-', '-', '-', '-', '-', '-', '-'},
-	//	{'P', 'P', 'P', '-', 'N', 'n', 'P', 'P'},
-	//	{'R', 'N', 'B', 'Q', 'K', '-', '-', 'R'}
-	//};
+	std::map<Color, std::map<Piece, u64*>> boards = {
+		{Color::WHITE, {
+			{PAWN, &white_pawns},
+			{ROOK, &white_rooks},
+			{KNIGHT, &white_knights},
+			{BISHOP, &white_bishops},
+			{QUEEN, &white_queens},
+			{KING, &white_kings},
+		}},
+		{Color::BLACK, {
+			{PAWN, &black_pawns},
+			{ROOK, &black_rooks},
+			{KNIGHT, &black_knights},
+			{BISHOP, &black_bishops},
+			{QUEEN, &black_queens},
+			{KING, &black_kings},
+		}}
+	};
 
 	char board[8][8] =
 	{
@@ -69,6 +77,7 @@ public:
 	void unMakeMove();
 	int moveCount();
 	Move lastMove();
+	void print();
 
 private:
 	u64* boardReference(Square square);

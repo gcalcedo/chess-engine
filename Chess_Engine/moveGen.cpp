@@ -5,7 +5,7 @@
 
 MoveGen::MoveGen(Position& position) : pos(position) {}
 
-void MoveGen::genMoves() {
+std::vector<Move> MoveGen::genMoves() {
 	moves.clear();
 
 	player = pos.turnColor == Color::WHITE ? white_mask() : black_mask();
@@ -15,14 +15,17 @@ void MoveGen::genMoves() {
 
 	genGuard();
 
+	genSlidingPiece(pos.getBoard(pos.turnColor, QUEEN), QUEEN);
 	genPawn();
 	genKnight();
 	genSlidingPiece(pos.getBoard(pos.turnColor, ROOK), ROOK);
 	genSlidingPiece(pos.getBoard(pos.turnColor, BISHOP), BISHOP);
-	genSlidingPiece(pos.getBoard(pos.turnColor, QUEEN), QUEEN);
+
 	genKing();
 
 	guarded = 0ULL;
+
+	return std::vector<Move>(moves);
 }
 
 u64 MoveGen::white_mask() {
@@ -257,6 +260,13 @@ void MoveGen::appendPromotions(u64 source, Direction move, char moveFlags) {
 			}
 		}
 
+		if ((BoardMask::board((Square)(idx + move)) & pinned) != 0) {
+			if ((pinDirections[(Square)(idx + move)] & BoardMask::board((Square)idx)) == 0) {
+				source ^= 1ULL << idx;
+				continue;
+			}
+		}
+
 		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | ROOK | moveFlags));
 		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | KNIGHT | moveFlags));
 		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | BISHOP | moveFlags));
@@ -293,30 +303,18 @@ bool MoveGen::isSquareEmpty(Square square) {
 
 bool show = false;
 
-long long MoveGen::perft(int depth, int initial) {
+long long MoveGen::perft(int depth) {
 	if (depth == 0) {
 		return 1;
 	}
 	else {
 		genMoves();
 		std::vector<Move> depthMoves(moves);
-
 		long long count = 0;
 
 		for (Move m : depthMoves) {
-
 			pos.makeMove(m);
-
-			long long partial = perft(depth - 1, initial);
-		
-
-			//if (depth == initial) {
-			//	std::cout << partial << " - ";
-			//	m.print();
-			//}
-
-			count += partial;
-
+			count += perft(depth - 1);
 			pos.unMakeMove();
 		}
 		return count;
@@ -328,7 +326,7 @@ void MoveGen::genGuard() {
 
 	Color enemyColor = pos.turnColor == Color::WHITE ? Color::BLACK : Color::WHITE;
 
-	//PAWNS
+	//GUARD
 	if (enemyColor == Color::WHITE) {
 		guarded |= move<NORTH_EAST>(pos.getBoard(enemyColor, PAWN));
 		guarded |= move<NORTH_WEST>(pos.getBoard(enemyColor, PAWN));
@@ -338,7 +336,6 @@ void MoveGen::genGuard() {
 		guarded |= move<SOUTH_WEST>(pos.getBoard(enemyColor, PAWN));
 	}
 
-	//KNIGHTS
 	u64 knights = pos.getBoard(enemyColor, KNIGHT);
 	u64 knightPattern = 0x00000A1100110AULL;
 
@@ -350,42 +347,28 @@ void MoveGen::genGuard() {
 		if (((0x1ULL << idx) & KING_SIDE) != 0) knightMove &= ~(FILE_A | FILE_B);
 		if (((0x1ULL << idx) & QUEEN_SIDE) != 0) knightMove &= ~(FILE_G | FILE_H);
 
-		appendGuard((Square)idx, knightMove);
-
+		guarded |= knightMove;
 		knights ^= 0x1ULL << idx;
 	}
 
-	//ROOKS
-	u64 rooks = pos.getBoard(enemyColor, ROOK);
+	u64 rooks = pos.getBoard(enemyColor, ROOK) | pos.getBoard(enemyColor, QUEEN);
 
 	while (rooks != 0) {
 		_BitScanForward64(&idx, rooks);
-		appendGuard((Square)idx, slidingAttack((Square)idx, ROOK));
-		appendGuard((Square)idx, xRayAttack((Square)idx, ROOK, pos.getBoard(pos.turnColor, KING)));
+		guarded |= slidingAttack((Square)idx, ROOK);
+		guarded |= xRayAttack((Square)idx, ROOK, pos.getBoard(pos.turnColor, KING));
 		rooks ^= 1ULL << idx;
 	}
 
-	//BISHOPS
-	u64 bishops = pos.getBoard(enemyColor, BISHOP);
+	u64 bishops = pos.getBoard(enemyColor, BISHOP) | pos.getBoard(enemyColor, QUEEN);
 
 	while (bishops != 0) {
 		_BitScanForward64(&idx, bishops);
-		appendGuard((Square)idx, slidingAttack((Square)idx, BISHOP));
-		appendGuard((Square)idx, xRayAttack((Square)idx, BISHOP, pos.getBoard(pos.turnColor, KING)));
+		guarded |= slidingAttack((Square)idx, BISHOP);
+		guarded |= xRayAttack((Square)idx, BISHOP, pos.getBoard(pos.turnColor, KING));
 		bishops ^= 1ULL << idx;
 	}
 
-	//QUEENS
-	u64 queens = pos.getBoard(enemyColor, QUEEN);
-
-	while (queens != 0) {
-		_BitScanForward64(&idx, queens);
-		appendGuard((Square)idx, slidingAttack((Square)idx, QUEEN));
-		appendGuard((Square)idx, xRayAttack((Square)idx, QUEEN, pos.getBoard(pos.turnColor, KING)));
-		queens ^= 1ULL << idx;
-	}
-
-	//KINGS
 	u64 kings = pos.getBoard(enemyColor, KING);
 	u64 kingPattern = 0x00000000070507ULL;
 
@@ -395,8 +378,8 @@ void MoveGen::genGuard() {
 		u64 kingMove = shiftMagnitude > 0 ? kingPattern << shiftMagnitude : kingPattern >> std::abs(shiftMagnitude);
 		if (((0x1ULL << idx) & KING_SIDE) != 0) kingMove &= ~(FILE_A);
 		if (((0x1ULL << idx) & QUEEN_SIDE) != 0) kingMove &= ~(FILE_H);
-		appendGuard((Square)idx, kingMove);
 
+		guarded |= kingMove;
 		kings ^= 0x1ULL << idx;
 	}
 
