@@ -25,6 +25,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="moveGen.cpp" />
     <ClCompile Include="search.cpp" />
+    <ClCompile Include="transposition.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boardMask.h" />
@@ -35,6 +36,7 @@
     <ClInclude Include="stringify.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="utilities.h" />
+    <ClInclude Include="transposition.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

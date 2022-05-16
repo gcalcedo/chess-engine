@@ -13,15 +13,18 @@ private:
 	u64 rival = 0ULL;
 	u64 occupied = 0ULL;
 	u64 empty = 0ULL;
-	u64 guarded = 0ULL;
+
 	u64 pinned = 0ULL;
 	std::map<Square, u64> pinDirections;
 	u64 checkResponses = 0ULL;
 	u64 checkers = 0ULL;
-	int checkersCount = 0;
+	
 
 public:
 	MoveGen(Position& position);
+
+	u64 guarded = 0ULL;
+	int checkersCount = 0;
 
 	std::vector<Move> genMoves();
 	long long perft(int depth);

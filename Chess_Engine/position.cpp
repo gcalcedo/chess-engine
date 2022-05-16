@@ -29,6 +29,25 @@ void Position::init() {
 			}
 		}
 	}
+
+	zobristKey = zobristHash();
+}
+
+Piece Position::getPiece(Square square) {
+	u64 boardMask = BoardMask::board(square);
+	if ((white_pawns & boardMask) != 0) return PAWN;
+	if ((white_rooks & boardMask) != 0) return ROOK;
+	if ((white_knights & boardMask) != 0) return KNIGHT;
+	if ((white_bishops & boardMask) != 0) return BISHOP;
+	if ((white_queens & boardMask) != 0) return QUEEN;
+	if ((white_kings & boardMask) != 0) return KING;
+	if ((black_pawns & boardMask) != 0) return PAWN;
+	if ((black_rooks & boardMask) != 0) return ROOK;
+	if ((black_knights & boardMask) != 0) return KNIGHT;
+	if ((black_bishops & boardMask) != 0) return BISHOP;
+	if ((black_queens & boardMask) != 0) return QUEEN;
+	if ((black_kings & boardMask) != 0) return KING;
+	return (Piece) -1;
 }
 
 u64 Position::getBoard(Color color, Piece piece) {
@@ -40,6 +59,7 @@ u64 Position::getBoard(Color color, Piece piece) {
 	case QUEEN: return color == Color::WHITE ? white_queens : black_queens;
 	case KING: return color == Color::WHITE ? white_kings : black_kings;
 	}
+	//return *boards[color][piece];
 }
 
 int Position::moveCount() {
@@ -83,6 +103,7 @@ u64* Position::boardReference(Color color, Piece piece) {
 		if (piece == KING) return &black_kings;
 		if (piece == PAWN) return &black_pawns;
 	}
+	//return boards[color][piece];
 }
 
 void Position::makeMove(Move move) {
@@ -99,9 +120,10 @@ void Position::makeMove(Move move) {
 			move.capturedSquare = move.to();
 		}
 
+		zobristKey ^= trans.seedMap[move.capturedSquare][(Color)-turnColor][getPiece(move.capturedSquare)];
 		u64* captured = boardReference(move.capturedSquare);
 		*captured &= ~BoardMask::board(move.capturedSquare);
-		move.capture = captured;
+		move.capture = captured; 
 
 		if (captured == &white_rooks && move.to() == S_H1) castling.white_kcastle = false;
 		if (captured == &white_rooks && move.to() == S_A1) castling.white_qcastle = false;
@@ -109,22 +131,30 @@ void Position::makeMove(Move move) {
 		if (captured == &black_rooks && move.to() == S_A8) castling.black_qcastle = false;
 	}
 
+	zobristKey ^= trans.seedMap[move.from()][turnColor][getPiece(move.from())];
 	u64* board = boardReference(move.from());
 	*board &= ~BoardMask::board(move.from());
 	*board |= BoardMask::board(move.to());
+	zobristKey ^= trans.seedMap[move.to()][turnColor][getPiece(move.to())];
 
 	if (board == &white_kings) {
 		castling.white_kcastle = false;
 		castling.white_qcastle = false;
 		if (move.isKingSideCastle()) {
+			zobristKey ^= trans.seedMap[S_H1][WHITE][ROOK];
 			u64* whiteRooks = boardReference(S_H1);
 			*whiteRooks &= ~BoardMask::board(S_H1);
 			*whiteRooks |= BoardMask::board(S_F1);
+			zobristKey ^= trans.seedMap[S_F1][WHITE][ROOK];
+			zobristKey ^= trans.castlingRights[0];
 		}
 		if (move.isQueenSideCastle()) {
+			zobristKey ^= trans.seedMap[S_A1][WHITE][ROOK];
 			u64* whiteRooks = boardReference(S_A1);
 			*whiteRooks &= ~BoardMask::board(S_A1);
 			*whiteRooks |= BoardMask::board(S_D1);
+			zobristKey ^= trans.seedMap[S_D1][WHITE][ROOK];
+			zobristKey ^= trans.castlingRights[1];
 		}
 	}
 
@@ -132,14 +162,20 @@ void Position::makeMove(Move move) {
 		castling.black_kcastle = false;
 		castling.black_qcastle = false;
 		if (move.isKingSideCastle()) {
+			zobristKey ^= trans.seedMap[S_H8][BLACK][ROOK];
 			u64* blackRooks = boardReference(S_H8);
 			*blackRooks &= ~BoardMask::board(S_H8);
 			*blackRooks |= BoardMask::board(S_F8);
+			zobristKey ^= trans.seedMap[S_F8][BLACK][ROOK];
+			zobristKey ^= trans.castlingRights[2];
 		}
 		if (move.isQueenSideCastle()) {
+			zobristKey ^= trans.seedMap[S_A8][BLACK][ROOK];
 			u64* blackRooks = boardReference(S_A8);
 			*blackRooks &= ~BoardMask::board(S_A8);
 			*blackRooks |= BoardMask::board(S_D8);
+			zobristKey ^= trans.seedMap[S_D8][BLACK][ROOK];
+			zobristKey ^= trans.castlingRights[3];
 		}
 	}
 
@@ -149,55 +185,76 @@ void Position::makeMove(Move move) {
 	if (board == &black_rooks && move.from() == S_A8) castling.black_qcastle = false;
 
 	if (move.isPromotion()) {
+		zobristKey ^= trans.seedMap[move.to()][turnColor][PAWN];
 		*board &= ~BoardMask::board(move.to());
 		*boardReference(turnColor, move.getPromotion()) |= BoardMask::board(move.to());
+		zobristKey ^= trans.seedMap[move.to()][turnColor][move.getPromotion()];
 	}
 
 	history.push_back(move);
 	turnColor = turnColor == Color::WHITE ? Color::BLACK : Color::WHITE;
+	zobristKey ^= trans.blackMoves;
 }
 
 void Position::unMakeMove() {
 	turnColor = turnColor == Color::WHITE ? Color::BLACK : Color::WHITE;
+	zobristKey ^= trans.blackMoves;
 	Move move = lastMove();
 
 	if (move.isPromotion()) {
+		zobristKey ^= trans.seedMap[move.to()][turnColor][move.getPromotion()];
 		*boardReference(turnColor, move.getPromotion()) &= ~BoardMask::board(move.to());
 		*boardReference(turnColor, PAWN) |= BoardMask::board(move.to());
+		zobristKey ^= trans.seedMap[move.to()][turnColor][PAWN];
 	}
 
+	zobristKey ^= trans.seedMap[move.to()][turnColor][getPiece(move.to())];
 	u64* board = boardReference(move.to());
 	*board &= ~BoardMask::board(move.to());
 	*board |= BoardMask::board(move.from());
+	zobristKey ^= trans.seedMap[move.from()][turnColor][getPiece(move.from())];
 
 	if (board == &white_kings) {
 		if (move.isKingSideCastle()) {
+			zobristKey ^= trans.seedMap[S_F1][WHITE][ROOK];
 			u64* whiteRooks = boardReference(S_F1);
 			*whiteRooks &= ~BoardMask::board(S_F1);
 			*whiteRooks |= BoardMask::board(S_H1);
+			zobristKey ^= trans.seedMap[S_H1][WHITE][ROOK];
+			zobristKey ^= trans.castlingRights[0];
 		}
 		if (move.isQueenSideCastle()) {
+			zobristKey ^= trans.seedMap[S_D1][WHITE][ROOK];
 			u64* whiteRooks = boardReference(S_D1);
 			*whiteRooks &= ~BoardMask::board(S_D1);
 			*whiteRooks |= BoardMask::board(S_A1);
+			zobristKey ^= trans.seedMap[S_A1][WHITE][ROOK];
+			zobristKey ^= trans.castlingRights[1];
 		}
 	}
 
 	if (board == &black_kings) {
 		if (move.isKingSideCastle()) {
+			zobristKey ^= trans.seedMap[S_F8][BLACK][ROOK];
 			u64* blackRooks = boardReference(S_F8);
 			*blackRooks &= ~BoardMask::board(S_F8);
 			*blackRooks |= BoardMask::board(S_H8);
+			zobristKey ^= trans.seedMap[S_H8][BLACK][ROOK];
+			zobristKey ^= trans.castlingRights[2];
 		}
 		if (move.isQueenSideCastle()) {
+			zobristKey ^= trans.seedMap[S_D8][BLACK][ROOK];
 			u64* blackRooks = boardReference(S_D8);
 			*blackRooks &= ~BoardMask::board(S_D8);
 			*blackRooks |= BoardMask::board(S_A8);
+			zobristKey ^= trans.seedMap[S_A8][BLACK][ROOK];
+			zobristKey ^= trans.castlingRights[3];
 		}
 	}
 
 	if (move.isCapture()) {
 		*move.capture |= BoardMask::board(move.capturedSquare);
+		zobristKey ^= trans.seedMap[move.capturedSquare][(Color)-turnColor][getPiece(move.capturedSquare)];
 	}
 
 	castling.white_kcastle = (move.castlingRights & 1) == 0 ? false : true;
@@ -208,8 +265,34 @@ void Position::unMakeMove() {
 	history.pop_back();
 }
 
-void extractBitboardString(u64 board, char token) {
+u64 Position::zobristHash() {
+	u64 zobristHash = 0ULL;
 
+	unsigned long idx;
+	u64 board = 0;
+
+	for (Color color : ColorList) {
+		for (Piece piece : PieceList) {
+			board = getBoard(color, piece);
+			while (board != 0) {
+				_BitScanForward64(&idx, board);
+				zobristHash ^= trans.seedMap[(Square)idx][color][piece];
+				board ^= 0x1ULL << idx;
+			}
+		}
+	}
+
+	if (turnColor == Color::BLACK) zobristHash ^= trans.blackMoves;
+	if (castling.white_kcastle) zobristHash ^= trans.castlingRights[0];
+	if (castling.white_qcastle) zobristHash ^= trans.castlingRights[1];
+	if (castling.black_kcastle) zobristHash ^= trans.castlingRights[2];
+	if (castling.black_qcastle) zobristHash ^= trans.castlingRights[3];
+
+	if (moveCount() > 0 && lastMove().isDoublePawnPush()) {
+		zobristHash ^= trans.enPassantFiles[BoardMask::file(lastMove().to())];
+	}
+
+	return zobristHash;
 }
 
 void Position::print() {

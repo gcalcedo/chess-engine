@@ -13,17 +13,16 @@ std::vector<Move> MoveGen::genMoves() {
 	occupied = player | rival;
 	empty = ~occupied;
 
+	guarded = 0ULL;
 	genGuard();
 
-	genSlidingPiece(pos.getBoard(pos.turnColor, QUEEN), QUEEN);
 	genPawn();
 	genKnight();
 	genSlidingPiece(pos.getBoard(pos.turnColor, ROOK), ROOK);
 	genSlidingPiece(pos.getBoard(pos.turnColor, BISHOP), BISHOP);
+	genSlidingPiece(pos.getBoard(pos.turnColor, QUEEN), QUEEN);
 
 	genKing();
-
-	guarded = 0ULL;
 
 	return std::vector<Move>(moves);
 }

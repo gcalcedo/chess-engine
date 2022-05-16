@@ -2,22 +2,30 @@
 
 #include "moveGen.h"
 #include "evaluation.h"
+#include "transposition.h"
+#include <chrono>
 
 class Search
 {
 private:
 	Position& pos;
 	MoveGen& gen;
-	Evaluation& eval;
+	Evaluation& evaluation;
 
-	int maxValue(int depth, int alpha = INT_MIN, int beta = INT_MAX, bool registerMove = true);
-	int minValue(int depth, int alpha = INT_MIN, int beta = INT_MAX, bool registerMove = true);
+	bool onTime = false;
+	std::chrono::steady_clock::time_point begin;
+	int max = 2000;
+
+	int negamax(int depth, int alpha = INT_MIN + 1, int beta = INT_MAX - 1, bool registerMove = true);
 
 public:
-	Move bestMove = Move(S_A1, S_A2, 0);
+	int nodesSearched = 0;
+	int depthSearched = 0;
+	Move bestMove = Move((Square) -1, (Square) - 1, 0);
 
 	Search(Position& pos, MoveGen& gen, Evaluation& eval);
 
-	int search(int depth, int alpha = 0, int beta = 0, bool registerMove = true);
+	int search(int depth);
+	void searchTimed(int milliseconds);
 };
 
