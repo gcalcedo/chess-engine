@@ -26,10 +26,12 @@ public:
 	u64 guarded = 0ULL;
 	int checkersCount = 0;
 
-	std::vector<Move> genMoves();
+	std::vector<Move> genMoves(bool onlyCaptures = false);
 	long long perft(int depth);
 
 private:
+	bool onlyCapturesEnabled = false;
+
 	int mod(int a, int b) { return a >= 0 ? a % b : (b - abs(a % b)) % b; }
 
 	template <Direction D> u64 move(u64 board) {

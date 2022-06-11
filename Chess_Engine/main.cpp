@@ -11,35 +11,38 @@ int main() {
 	Evaluation& eval = *(new Evaluation(position, gen));
 	Search& search = *(new Search(position, gen, eval));
 
-	position.castling.white_kcastle = false;
-	position.castling.white_qcastle = false;
-	position.castling.black_kcastle = false;
-	position.castling.black_qcastle = false;
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	search.searchTimed(6000);
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cout << "Depth " << (search.depthSearched - 1) << " | " << search.nodesSearched << " nodes in " <<
+		std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms -> ";
+	search.bestMove.print();
 
 	//for (int i = 1; i < 50; i++) {
-	//	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	//	search.search(i);
-	//	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	//	std::cout << "Depth " << i << " | " << search.nodesSearched << " nodes in " <<
-	//		std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms -> ";
-	//	search.bestMove.print();
+	//	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	//	//search.search(i);
+	//	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//	//std::cout << "Depth " << i << " | " << search.nodesSearched << " nodes in " <<
+	//	//	std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms -> ";
+	//	//search.bestMove.print();
+
+
 	//}
 
-	std::vector<Move> moves = gen.genMoves();
+	//std::vector<Move> moves = gen.genMoves();
+	//while (true) {
+	//	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	//	search.searchTimed(5000);
+	//	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//	std::cout << "Depth " << (search.depthSearched - 1) << " | " << search.nodesSearched << " nodes in " <<
+	//		std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms -> ";
 
-	while (true) {
-		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-		search.searchTimed(5000);
-		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-		std::cout << "Depth " << (search.depthSearched - 1) << " | " << search.nodesSearched << " nodes in " <<
-			std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms -> ";
+	//	std::cout << "MOVE: ";
+	//	search.bestMove.print();
+	//	position.makeMove(search.bestMove);
 
-		std::cout << "MOVE: ";
-		search.bestMove.print();
-		position.makeMove(search.bestMove);
-
-		for (size_t i = 0; i < 65536; i++) {
-			position.trans.table[i]->zobristKey = -1;
-		}
-	}
+	//	for (size_t i = 0; i < 65536; i++) {
+	//		position.trans.table[i]->zobristKey = -1;
+	//	}
+	//}
 }

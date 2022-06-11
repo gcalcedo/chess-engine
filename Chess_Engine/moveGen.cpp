@@ -5,8 +5,10 @@
 
 MoveGen::MoveGen(Position& position) : pos(position) {}
 
-std::vector<Move> MoveGen::genMoves() {
+std::vector<Move> MoveGen::genMoves(bool onlyCaptures) {
 	moves.clear();
+
+	onlyCapturesEnabled = onlyCaptures;
 
 	player = pos.turnColor == Color::WHITE ? white_mask() : black_mask();
 	rival = pos.turnColor == Color::WHITE ? black_mask() : white_mask();
@@ -83,7 +85,7 @@ void MoveGen::genPawn() {
 		}
 	}
 
-	if (pos.moveCount() > 0 &&  pos.lastMove().isDoublePawnPush() && (BoardMask::board(pos.lastMove().to()) & checkers) != 0) {
+	if (pos.moveCount() > 0 && pos.lastMove().isDoublePawnPush() && (BoardMask::board(pos.lastMove().to()) & checkers) != 0) {
 		checkResponses &= ~BoardMask::board((Square)(pos.lastMove().to() + (pos.turnColor == Color::WHITE ? 8 : -8)));
 	}
 }
@@ -185,21 +187,23 @@ void MoveGen::genKing() {
 		appendMoveMask((Square)idx, kingMove & empty, QUIET);
 		appendMoveMask((Square)idx, kingMove & rival, CAPTURE);
 
-		if ((pos.getBoard(pos.turnColor, KING) & guarded) == 0) {
-			if (pos.turnColor == Color::WHITE) {
-				if (pos.castling.white_kcastle == true && isSquareSafe(S_F1) && isSquareSafe(S_G1)) {
-					moves.push_back(Move(Square(idx), S_G1, KING_SIDE_CASTLE));
+		if (!onlyCapturesEnabled) {
+			if ((pos.getBoard(pos.turnColor, KING) & guarded) == 0) {
+				if (pos.turnColor == Color::WHITE) {
+					if (pos.castling.white_kcastle == true && isSquareSafe(S_F1) && isSquareSafe(S_G1)) {
+						moves.push_back(Move(Square(idx), S_G1, KING_SIDE_CASTLE));
+					}
+					if (pos.castling.white_qcastle == true && isSquareSafe(S_D1) && isSquareSafe(S_C1) & isSquareEmpty(S_B1)) {
+						moves.push_back(Move(Square(idx), S_C1, QUEEN_SIDE_CASTLE));
+					}
 				}
-				if (pos.castling.white_qcastle == true && isSquareSafe(S_D1) && isSquareSafe(S_C1) & isSquareEmpty(S_B1)) {
-					moves.push_back(Move(Square(idx), S_C1, QUEEN_SIDE_CASTLE));
-				}
-			}
-			else {
-				if (pos.castling.black_kcastle == true && isSquareSafe(S_F8) && isSquareSafe(S_G8)) {
-					moves.push_back(Move(Square(idx), S_G8, KING_SIDE_CASTLE));
-				}
-				if (pos.castling.black_qcastle == true && isSquareSafe(S_D8) && isSquareSafe(S_C8) & isSquareEmpty(S_B8)) {
-					moves.push_back(Move(Square(idx), S_C8, QUEEN_SIDE_CASTLE));
+				else {
+					if (pos.castling.black_kcastle == true && isSquareSafe(S_F8) && isSquareSafe(S_G8)) {
+						moves.push_back(Move(Square(idx), S_G8, KING_SIDE_CASTLE));
+					}
+					if (pos.castling.black_qcastle == true && isSquareSafe(S_D8) && isSquareSafe(S_C8) & isSquareEmpty(S_B8)) {
+						moves.push_back(Move(Square(idx), S_C8, QUEEN_SIDE_CASTLE));
+					}
 				}
 			}
 		}
@@ -242,7 +246,9 @@ void MoveGen::appendMoves(u64 source, Direction move, char moveFlags) {
 			}
 		}
 
-		moves.push_back(Move(Square(idx + move), (Square)idx, moveFlags));
+		if (!onlyCapturesEnabled || (onlyCapturesEnabled && ((moveFlags & CAPTURE) != 0))) {
+			moves.push_back(Move(Square(idx + move), (Square)idx, moveFlags));
+		}
 		source ^= 1ULL << idx;
 	}
 }
@@ -266,10 +272,12 @@ void MoveGen::appendPromotions(u64 source, Direction move, char moveFlags) {
 			}
 		}
 
-		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | ROOK | moveFlags));
-		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | KNIGHT | moveFlags));
-		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | BISHOP | moveFlags));
-		moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | QUEEN | moveFlags));
+		if (!onlyCapturesEnabled || (onlyCapturesEnabled && ((moveFlags & CAPTURE) != 0))) {
+			moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | ROOK | moveFlags));
+			moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | KNIGHT | moveFlags));
+			moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | BISHOP | moveFlags));
+			moves.push_back(Move(Square(idx + move), (Square)idx, PROMOTION | QUEEN | moveFlags));
+		}
 		source ^= 1ULL << idx;
 	}
 }
@@ -278,7 +286,9 @@ void MoveGen::appendMoveMask(Square piece, u64 mask, char moveFlags) {
 	unsigned long idx;
 	while (mask != 0) {
 		_BitScanForward64(&idx, mask);
-		moves.push_back(Move(piece, (Square)idx, moveFlags));
+		if (!onlyCapturesEnabled || (onlyCapturesEnabled && ((moveFlags & CAPTURE) != 0))) {
+			moves.push_back(Move(piece, (Square)idx, moveFlags));
+		}
 		mask ^= 1ULL << idx;
 	}
 }
@@ -481,7 +491,7 @@ void MoveGen::genGuard() {
 		if (checks != 0) checkersCount++;
 		checkResponses |= move<SOUTH_WEST>(checks);
 		checkers |= move<SOUTH_WEST>(checks);
-		
+
 		checks = move<NORTH_WEST>(pos.getBoard(enemyColor, PAWN)) & pos.getBoard(pos.turnColor, KING);
 		if (checks != 0) checkersCount++;
 		checkResponses |= move<SOUTH_EAST>(checks);

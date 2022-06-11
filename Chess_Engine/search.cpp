@@ -1,4 +1,5 @@
 #include "search.h"
+#include "stringify.h"
 
 Search::Search(Position& position, MoveGen& generation, Evaluation& evaluation)
 	: pos(position), gen(generation), evaluation(evaluation) {};
@@ -55,10 +56,12 @@ int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 	}
 
 	if (depth == 0) {
-		return  pos.turnColor * evaluation.evaluate();
+		//return  pos.turnColor * evaluation.evaluate();
+		return quiescenceSearch();
 	}
 
 	std::vector<Move> moves = evaluation.sortMoves(gen.genMoves(), hashMove);
+	//std::vector<Move> moves = gen.genMoves();
 	if (moves.size() == 0) {
 		return evaluation.evaluate();
 	}
@@ -107,4 +110,32 @@ int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 	}
 
 	return bestEval;
+}
+
+int Search::quiescenceSearch(int alpha, int beta) {
+	nodesSearched++;
+	int eval = pos.turnColor * evaluation.evaluate();
+
+	if (eval >= beta) {
+		return beta;
+	}
+	if (alpha < eval) {
+		alpha = eval;
+	}
+
+	std::vector<Move> moves = evaluation.sortMoves(gen.genMoves(true), Move());
+	for (Move m : moves) {
+		pos.makeMove(m);
+		int eval = -quiescenceSearch(-beta, -alpha);
+		pos.unMakeMove();
+
+		if (eval >= beta) {
+			return beta;
+		}
+		if (eval > alpha) {
+			alpha = eval;
+		}
+	}
+
+	return alpha;
 }
