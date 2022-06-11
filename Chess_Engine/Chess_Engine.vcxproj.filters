@@ -36,6 +36,9 @@
     <ClCompile Include="transposition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="moveParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="position.h">
@@ -63,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="transposition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="moveParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
