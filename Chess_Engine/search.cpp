@@ -5,11 +5,13 @@ Search::Search(Position& position, MoveGen& generation, Evaluation& evaluation)
 	: pos(position), gen(generation), evaluation(evaluation) {};
 
 int Search::search(int depth) {
+	timerEnabled = false;
 	nodesSearched = 0;
 	return negamax(depth);
 }
 
 void Search::searchTimed(int milliseconds) {
+	timerEnabled = true;
 	onTime = true;
 	begin = std::chrono::steady_clock::now();
 	max = milliseconds;
@@ -26,10 +28,12 @@ void Search::searchTimed(int milliseconds) {
 int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 	nodesSearched++;
 
-	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-	if (std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() >= max) {
-		onTime = false;
-		return 0;
+	if (timerEnabled) {
+		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() >= max) {
+			onTime = false;
+			return 0;
+		}
 	}
 
 	int alphaOriginal = alpha;
@@ -37,7 +41,7 @@ int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 	Move hashMove = Move();
 	u64 key = pos.zobristKey;
 	TranspositionEntry* entry = pos.trans.table[key & 0xFFFF];
-	if ((entry->zobristKey == key) && entry->depth >= depth) {
+	if ((entry->zobristKey == key) && entry->depth >= depth && !registerMove) {
 		hashMove = entry->move;
 
 		if (entry->type == EXACT) {
@@ -62,8 +66,14 @@ int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 
 	std::vector<Move> moves = evaluation.sortMoves(gen.genMoves(), hashMove);
 	//std::vector<Move> moves = gen.genMoves();
+
 	if (moves.size() == 0) {
-		return evaluation.evaluate();
+		if (gen.checkersCount > 0) {
+			return INT_MIN + 100 - depth;
+		}
+		else {
+			return 0;
+		}
 	}
 
 	Move bestMoveTmp = moves[0];
@@ -74,16 +84,19 @@ int Search::negamax(int depth, int alpha, int beta, bool registerMove) {
 		int eval = -negamax(depth - 1, -beta, -alpha, false);
 		pos.unMakeMove();
 
-		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() >= max) {
-			onTime = false;
-			return 0;
+		if (timerEnabled) {
+			std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+			if (std::chrono::duration_cast<std::chrono::milliseconds>(now - begin).count() >= max) {
+				onTime = false;
+				return 0;
+			}
 		}
 
 		if (eval > bestEval) {
 			bestEval = eval;
 			bestMoveTmp = m;
 		}
+
 		alpha = std::max(alpha, bestEval);
 
 		if (alpha >= beta) {

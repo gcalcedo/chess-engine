@@ -298,6 +298,10 @@ u64 Position::zobristHash() {
 void Position::print() {
 	char board[8][8];
 
+	system("cls");
+
+	//std::cout << (turnColor == Color::WHITE ? "White" : "Black") << " to move." << std::endl;
+
 	for (size_t x = 0; x < 8; ++x) {
 		for (size_t y = 0; y < 8; ++y) {
 			int idx = 63 - (x * 8 + y);
@@ -320,7 +324,7 @@ void Position::print() {
 	}
 
 	for (size_t x = 0; x < 8; ++x) {
-		std::cout << x + 1 << " | ";
+		std::cout << 8 - x << " | ";
 		for (size_t y = 0; y < 8; ++y) {
 			std::cout << board[x][y] << " ";
 		}
@@ -328,5 +332,5 @@ void Position::print() {
 	}
 	std::cout << "    ---------------" << std::endl;
 	std::cout << "    A B C D E F G H" << std::endl;
-	std::cout << (turnColor == Color::WHITE ? "White" : "Black") << " to move." << std::endl;
+	std::cout << std::endl;
 }

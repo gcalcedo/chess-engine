@@ -12,6 +12,7 @@ private:
 	MoveGen& gen;
 	Evaluation& evaluation;
 
+	bool timerEnabled = false;
 	bool onTime = false;
 	std::chrono::steady_clock::time_point begin;
 	int max = 2000;

@@ -56,7 +56,7 @@ Evaluation::Evaluation(Position& position, MoveGen& moveGen) : pos(position), ge
 		 -5,  0,  0,  0,  0,  0,  0, -5,
 		 -5,  0,  0,  0,  0,  0,  0, -5,
 		 -5,  0,  0,  0,  0,  0,  0, -5,
-		  0,  0,  0,  5,  5,  0,  0,  0
+		  0,  0,  0, 10, 10,  5,  0,  0
 	};
 	std::vector<int> queen = {
 		-20,-10,-10, -5, -5,-10,-10,-20,
@@ -76,7 +76,7 @@ Evaluation::Evaluation(Position& position, MoveGen& moveGen) : pos(position), ge
 		-20,-30,-30,-40,-40,-30,-30,-20,
 		-10,-20,-20,-20,-20,-20,-20,-10,
 		 20, 20,  0,  0,  0,  0, 20, 20,
-		 20, 30, 10,  0,  0, 10, 30, 20
+		 20, 50, 10,  0,  0, 10, 50, 20
 	};
 
 	std::unordered_map<Piece, std::vector<int>> white_pieces;
@@ -140,15 +140,6 @@ std::vector<Move> Evaluation::sortMoves(std::vector<Move> moves, Move hashMove) 
 
 int Evaluation::evaluate() {
 	int evaluation = 0;
-
-	//if (gen.genMoves().size() == 0) {
-	//	if (gen.checkersCount > 0) {
-	//		evaluation += pos.turnColor == BLACK ? 10000 : -10000;
-	//	}
-	//	else {
-	//		return 0;
-	//	}
-	//}
 
 	int white_material = materialCount(Color::WHITE);
 	int black_material = materialCount(Color::BLACK);
