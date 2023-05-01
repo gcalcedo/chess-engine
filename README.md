@@ -4,7 +4,7 @@
 
 # Chess Engine ♟️
 
-Chess engine implemented from scratch in C++. After a bit of testing againt the [Chess.com](chess.com) AI, I think its current level is around 1800 ELO points, more than enough to beat me! >.<
+Chess engine implemented from scratch in C++. After a bit of testing against the [Chess.com](chess.com) AI, I believe its current level is around 1800 ELO points, more than enough to beat me! >.<
 
 ## Techniques and Algorithms
 A quick reference to the [Chess Programming Wiki](https://www.chessprogramming.org/Main_Page) of the approaches I have implemented.
